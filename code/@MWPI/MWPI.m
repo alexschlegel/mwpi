@@ -15,23 +15,29 @@ classdef MWPI < PTB.Object
 %   <options>:
 %       debug:      (0) the debug level
 %
-% Updated: 2015-05-26
+% Updated: 2015-06-24
 
     % PUBLIC PROPERTIES-------------------------------------------------%
     properties
         Experiment;
-		nRun;
+		nRun; % number of runs expected to be performed
+		maxRun; % a bit higher than nRun, in case something gets interrupted and we need some new runs.
 		nBlock;  % per run
 		RSVPLength;
-		stim;    % 32 x 1 array of stimulus images
+		stim;    % 32 x 1 cell of stimulus images
+		stimYes; % stim but colored green
+		stimNo;  % stim but colored red
+		runsComplete; % runsComplete(n) == 1 if run n has been completed.
 		
 		% block design properties (generated with Init):
-		blockType;  % nRun x nBlock char array: 'v' = visual, 'w' = working memory
-		wShape; % nRun x nBlock int array; shape shown at start and end of block
-		vShape; % nRun x nBlock int array; shape shown during block
-		target; % nRun x nBlock int array; correct shape for each block
-		rsvp;   % nRun x nBlock x RSVPLength int array for RSVP stream
-		match;  % nRun x nBlock x RSVPLength int array; whether each RSVP shape is a match
+		blockType;  % maxRun x nBlock char array: 'V' = visual, 'W' = working memory
+		wShape; % maxRun x nBlock int array; shape shown at start and end of block
+		vShape; % maxRun x nBlock int array; shape shown during block
+		rShape; % maxRun x nBlock int array; shape shown during recall
+		target; % maxRun x nBlock int array; correct shape for each block
+		rsvp;   % maxRun x nBlock x RSVPLength int array for RSVP stream
+		match;  % maxRun x nBlock x RSVPLength logical array; whether each RSVP shape is a match
+		rMatch; % maxRun x nBlock logical array; true if rShape == wShape
     end
     % PUBLIC PROPERTIES-------------------------------------------------%
     
@@ -55,7 +61,7 @@ classdef MWPI < PTB.Object
             opt.name = 'mwpi';
             opt.context = conditional(opt.debug==2,'psychophysics','fmri');
             opt.tr = MWPI.Param('time','tr');
-            opt.input_scheme = 'lr';
+            opt.input_scheme = 'lr';			
             
             % window
             opt.background = MWPI.Param('color','back');
@@ -66,73 +72,50 @@ classdef MWPI < PTB.Object
             
             % create experiment
             mwpi.Experiment = PTB.Experiment(cOpt{:});
-            
-            % start
             mwpi.Start;
 			
-			mwpi.nRun = MWPI.Param('exp','runs');
+			% define keys
+			mwpi.Experiment.Input.Set('response',{'left','right'});
+			mwpi.Experiment.Input.Set('match','left');
+			mwpi.Experiment.Input.Set('noMatch','right');
+			
+			mwpi.nRun = MWPI.Param('exp','nRun');
+			mwpi.maxRun = MWPI.Param('exp','maxRun');
 			mwpi.nBlock = MWPI.Param('exp','blocks');
 			mwpi.RSVPLength = MWPI.Param('exp','RSVPLength');
 			
 			% if not done yet, initialize block design
 			if ~isfield(mwpi.Experiment.Info.GetAll, 'mwpi')
 				mwpi.Init;
-				mwpi.Experiment.Info.Set('mwpi','runsComplete',0);
+				mwpi.Experiment.Info.Set('mwpi','runsComplete',[]);
+				mwpi.runsComplete = [];
 			else
 				% load existing values
+				
 				mwpi.blockType = mwpi.Experiment.Info.Get('mwpi','blockType');
 				mwpi.wShape = mwpi.Experiment.Info.Get('mwpi','wShape');
 				mwpi.vShape = mwpi.Experiment.Info.Get('mwpi','vShape');
+				mwpi.rShape = mwpi.Experiment.Info.Get('mwpi','rShape');
 				mwpi.target = mwpi.Experiment.Info.Get('mwpi','target');
 				mwpi.rsvp = mwpi.Experiment.Info.Get('mwpi','rsvp');
 				mwpi.match = mwpi.Experiment.Info.Get('mwpi','match');
+				mwpi.rMatch = mwpi.Experiment.Info.Get('mwpi','rMatch');
+				mwpi.runsComplete = mwpi.Experiment.Info.Get('mwpi','runsComplete');
 			end
 			
 			% generate stimuli
 			colFore = mwpi.Experiment.Color.Get(MWPI.Param('color','fore'));
+			colYes = mwpi.Experiment.Color.Get(MWPI.Param('color','yes'));
+			colNo = mwpi.Experiment.Color.Get(MWPI.Param('color','no'));
 			colBack = mwpi.Experiment.Color.Get(opt.background);
 			mwpi.stim = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colFore(1:3), ...
  				colBack(1:3)), (0:31)', 'uni', false);
+			mwpi.stimYes = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colYes(1:3), ...
+ 				colBack(1:3)), (0:31)', 'uni', false);
+			mwpi.stimNo = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colNo(1:3), ...
+ 				colBack(1:3)), (0:31)', 'uni', false);
         end
         %-----------------------------------------------------------%
-		function Init(mwpi)
-			% generate the sequence of v/w blocks, target shapes, and RSVP stream.
-			param.wShape = (1:32);
-			param.vShape = (1:32);
-			for i = 1:mwpi.RSVPLength
-				param.(['rsvp',num2str(i)]) = (1:10);
-			end
-			
-			[mwpi.blockType,param] = blockdesign('vw',mwpi.nBlock/2,mwpi.nRun,param);
-			mwpi.wShape = param.wShape;
-			mwpi.vShape = param.vShape;			
-			mwpi.target = arrayfun(@(type,wshp,vshp) conditional(type == 'w',wshp,vshp),...
-				mwpi.blockType, mwpi.wShape, mwpi.vShape);
-			
-			% just used to decide whether each RSVP shape is a match
-			rsvpNum = arrayfun(@(i) param.(['rsvp',num2str(i)]), ...
-				1:mwpi.RSVPLength,'uni',false);
-			% the RSVP stream
-			mwpi.rsvp = arrayfun(@(i) arrayfun(@(rsvpn,target) ...
-				conditional(rsvpn <= 3, target, randi(32)),...
-				rsvpNum{i}, mwpi.target), 1:mwpi.RSVPLength,'uni',false);
-			
-			% whether the target matches the rsvp stream
-			mwpi.match = arrayfun(@(i) mwpi.rsvp{i} == mwpi.target, ...
-				1:mwpi.RSVPLength, 'uni',false);
-			
-			mwpi.rsvp = cat(3,mwpi.rsvp{:});
-			mwpi.match = cat(3,mwpi.match{:});
-			
-			% save
-			mwpi.Experiment.Info.Set('mwpi','blockType',mwpi.blockType);
-			mwpi.Experiment.Info.Set('mwpi','wShape',mwpi.wShape);
-			mwpi.Experiment.Info.Set('mwpi','vShape',mwpi.vShape);
-			mwpi.Experiment.Info.Set('mwpi','target',mwpi.target);
-			mwpi.Experiment.Info.Set('mwpi','rsvp',mwpi.rsvp);
-			mwpi.Experiment.Info.Set('mwpi','match',mwpi.match);
-		end
-		%-----------------------------------------------------------%
         function End(mwpi,varargin)
             mwpi.Experiment.End(varargin{:});
         end

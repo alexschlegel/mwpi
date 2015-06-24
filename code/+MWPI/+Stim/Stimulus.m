@@ -17,7 +17,7 @@ function [im,b] = Stimulus(index,colFore,colBack)
 % 	im	- the stimulus image
 %	b	- the stimulus mask
 % 
-% Updated: 2015-05-30 for MWPI
+% Updated: 2015-06-18 for MWPI
 % Copyright 2013 Alex Schlegel (schlegel@gmail.com).  This work is licensed
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
