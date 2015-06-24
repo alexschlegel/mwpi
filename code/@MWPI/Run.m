@@ -45,10 +45,6 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 	
 	%-- set up sequence --%
 	
-	% scanner starts
-	tRun = MWPI.Param('time','run');
-	mwpi.Experiment.Scanner.StartScan(tRun);
-	
 	% initialize texture handles
 	hPrompt = mwpi.Experiment.Window.OpenTexture('prompt');
 	hTask = arrayfun(@(i) mwpi.Experiment.Window.OpenTexture(['task',num2str(i)]),...
@@ -90,13 +86,16 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 								{@(tNow,tNext) DoRecall(kBlock,tNow,tNext)}
 								], (1:mwpi.nBlock)','uni',false);
 	fwait = vertcat(fwait{:},false);
+	
+	% scanner starts
+	tRun = MWPI.Param('time','run');
+	mwpi.Experiment.Scanner.StartScan(tRun);
 								
 	% go!
 	[cRun.tStart, cRun.tEnd, cRun.tShow, cRun.bAbort, cRun.bCorrect, cRun.tResponse] = ...
 		mwpi.Experiment.Show.Sequence(cX,tShow, ...
 		'tstart',1, ...
 		'tbase','absolute', ...
-		'tunit','tr', ...
 		'fwait', fwait ...
 		);
 	
@@ -112,7 +111,19 @@ else
 end
 mwpi.Experiment.Info.Set('mwpi','result',sResults);
 mwpi.Experiment.Info.AddLog('Results saved.');
-	
+
+% close textures
+mwpi.Experiment.Window.CloseTexture('prompt');
+arrayfun(@(i) mwpi.Experiment.Window.CloseTexture(['task',num2str(i)]),...
+			(1:mwpi.RSVPLength)','uni',false);
+arrayfun(@(i) mwpi.Experiment.Window.CloseTexture(['taskYes',num2str(i)]),...
+			(1:mwpi.RSVPLength)','uni',false);
+arrayfun(@(i) mwpi.Experiment.Window.CloseTexture(['taskNo',num2str(i)]),...
+			(1:mwpi.RSVPLength)','uni',false);
+mwpi.Experiment.Window.CloseTexture('recall');
+mwpi.Experiment.Window.CloseTexture('recallYes');
+mwpi.Experiment.Window.CloseTexture('recallNo');
+
 % finish up
 mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
 mwpi.runsComplete(kRun) = true;
@@ -133,13 +144,14 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		
 		% wait
 		mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_IDLE, ...
-			mwpi.Experiment.Scheduler.TR2ms(tNext));
+			mwpi.Experiment.Scanner.TR2ms(tNext));
 	end
 %-------------------------------------------------------------------%
 	function [bAbort, bCorrect, tResponse] = DoTask(kBlock, kTrial, tNow, ~)
 		bAbort = false;
-		kCorrect = mwpi.Experiment.Input.Get(conditional(mwpi.match(kRun,kBlock,kTrial),'match','noMatch'));
+		kCorrect = cell2mat(mwpi.Experiment.Input.Get(conditional(mwpi.match(kRun,kBlock,kTrial),'match','noMatch')));
 		
+		% whether there has been a response yet
 		arrResponse = mwpi.Experiment.Info.Get('mwpi','bTaskResponse');
 		if isempty(arrResponse)
 			arrResponse = false(mwpi.maxRun, mwpi.nBlock, mwpi.RSVPLength);
@@ -154,36 +166,32 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		end
 		
 		% check for a response
-		[~,~,~,kButton] = mwpi.Experiment.Input.DownOnce('response');
-		if kButton == kCorrect
-			tResponse = tNow;
-			bResponse = true;
-			bCorrect = true;
-		elseif ~isempty(kButton)
-			tResponse = tNow;
-			bResponse = true;
-			bCorrect = false;
-		else
+		[bResponse,~,~,kButton] = mwpi.Experiment.Input.DownOnce('response');
+		if ~bResponse
 			tResponse = [];
+			bCorrect = [];
+			return
 		end
 		
-		if bResponse
-			arrResponse(kRun,kBlock,kTrial) = true;
-			mwpi.Experiment.Info.Set('mwpi','bTaskResponse',arrResponse);
-			% show feedback
-			if bCorrect
-				mwpi.Experiment.Show.Texture(hTaskYes{kTrial});
-				mwpi.Experiment.Window.Flip('correct response');
-			else
-				mwpi.Experiment.Show.Texture(hTaskNo{kTrial});
-				mwpi.Experiment.Window.Flip('incorrect response');
-			end
-		end		
+		tResponse = tNow;
+		bCorrect = conditional(any(kButton ~= kCorrect), false, true);
+		
+		arrResponse(kRun,kBlock,kTrial) = true;
+		mwpi.Experiment.Info.Set('mwpi','bTaskResponse',arrResponse);
+		% show feedback
+		if bCorrect
+			mwpi.Experiment.Show.Texture(hTaskYes{kTrial});
+			mwpi.Experiment.Window.Flip('correct response');
+		else
+			mwpi.Experiment.Show.Texture(hTaskNo{kTrial});
+			mwpi.Experiment.Window.Flip('incorrect response');
+		end
+				
 	end
 %------------------------------------------------------------------%
 	function [bAbort, bCorrect, tResponse] = DoRecall(kBlock, tNow, ~)		
 		bAbort = false;
-		kCorrect = mwpi.Experiment.Input.Get(conditional(mwpi.rMatch(kRun,kBlock),'match','noMatch'));
+		kCorrect = cell2mat(mwpi.Experiment.Input.Get(conditional(mwpi.rMatch(kRun,kBlock),'match','noMatch')));
 		
 		arrResponse = mwpi.Experiment.Info.Get('mwpi','bRecallResponse');
 		if isempty(arrResponse)
@@ -199,31 +207,25 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		end
 		
 		% check for a response
-		[~,~,~,kButton] = mwpi.Experiment.Input.DownOnce('response');
-		if kButton == kCorrect
-			tResponse = tNow;
-			bResponse = true;
-			bCorrect = true;
-		elseif ~isempty(kButton)
-			tResponse = tNow;
-			bResponse = true;
-			bCorrect = false;
-		else
+		[bResponse,~,~,kButton] = mwpi.Experiment.Input.DownOnce('response');
+		if ~bResponse
 			tResponse = [];
+			bCorrect = [];
+			return 
 		end
 		
-		if bResponse
-			arrResponse(kRun,kBlock) = true;
-			mwpi.Experiment.Info.Set('mwpi','bRecallResponse',arrResponse);
-			% show feedback
-			if bCorrect
-				mwpi.Experiment.Show.Texture(hRecallYes);
-				mwpi.Experiment.Window.Flip('correct response');
-			else
-				mwpi.Experiment.Show.Texture(hRecallNo);
-				mwpi.Experiment.Window.Flip('incorrect response');
-			end
-		end		
+		tResponse = tNow;
+		bCorrect = conditional(any(kButton ~= kCorrect), false, true);	
 		
+		arrResponse(kRun,kBlock) = true;
+		mwpi.Experiment.Info.Set('mwpi','bRecallResponse',arrResponse);
+		% show feedback
+		if bCorrect
+			mwpi.Experiment.Show.Texture(hRecallYes);
+			mwpi.Experiment.Window.Flip('correct response');
+		else
+			mwpi.Experiment.Show.Texture(hRecallNo);
+			mwpi.Experiment.Window.Flip('incorrect response');
+		end		
 	end
 end

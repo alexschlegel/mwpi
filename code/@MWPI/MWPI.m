@@ -59,7 +59,7 @@ classdef MWPI < PTB.Object
                 'debug' ,   0 ...
                 );
             opt.name = 'mwpi';
-            opt.context = conditional(opt.debug==2,'psychophysics','fmri');
+            opt.context = 'fmri';
             opt.tr = MWPI.Param('time','tr');
             opt.input_scheme = 'lr';			
             
