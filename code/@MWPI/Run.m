@@ -136,10 +136,11 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		tResponse = [];
 		
 		% check if textures have been prepared
-		arrPrepared = mwpi.Experiment.Info.Get('mwpi','blocksPrepared');
-		if isempty(arrPrepared) || 	~arrPrepared(kRun,kBlock)
+        persistent lastPrepared; % [kRun kBlock] of last set of textures prepared
+		if isempty(lastPrepared) || ~all(lastPrepared == [kRun,kBlock])
 			% prepare the textures for the next block.
 			mwpi.PrepTextures(kRun, kBlock);
+            lastPrepared = [kRun, kBlock];
 		end
 		
 		% wait

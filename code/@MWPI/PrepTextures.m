@@ -48,15 +48,7 @@ shw.Image(mwpi.stimYes{mwpi.rShape(kRun,kBlock)},...
 shw.Image(mwpi.stim{mwpi.rShape(kRun,kBlock)},...
 			MWPI.Param('size','stim'),'window','recallNo');
 
-arrPrepared = mwpi.Experiment.Info.Get('mwpi','blocksPrepared');
-
-if isempty(arrPrepared)
-	arrPrepared = false(mwpi.nRun, mwpi.nBlock);
-end
-
-arrPrepared(kRun,kBlock) = true;
-mwpi.Experiment.Info.Set('mwpi','blocksPrepared',arrPrepared);		
-shw.AddLog(['textures prepared for block ' kBlock]);
+shw.AddLog(['textures prepared for block ' num2str(kBlock)]);
 
 %-----------------------------------------------------------------------%
 	function MakeTaskScreens(kTrial)
