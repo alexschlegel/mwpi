@@ -42,6 +42,8 @@ end
 mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 
 % perform the run
+    persistent tWait;
+    clear tWait;
 	
 	%-- set up sequence --%
 	
@@ -148,18 +150,12 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 			mwpi.Experiment.Scanner.TR2ms(tNext));
 	end
 %-------------------------------------------------------------------%
-	function [bAbort, bCorrect, tResponse] = DoTask(kBlock, kTrial, tNow, ~)
+	function [bAbort, bCorrect, tResponse] = DoTask(kBlock, kTrial, tNow, tNext)
 		bAbort = false;
 		kCorrect = cell2mat(mwpi.Experiment.Input.Get(conditional(mwpi.match(kRun,kBlock,kTrial),'match','noMatch')));
 		
-		% whether there has been a response yet
-		arrResponse = mwpi.Experiment.Info.Get('mwpi','bTaskResponse');
-		if isempty(arrResponse)
-			arrResponse = false(mwpi.maxRun, mwpi.nBlock, mwpi.RSVPLength);
-		end
-		
 		% if a response has been logged, don't check for another.
-		if arrResponse(kRun,kBlock,kTrial)
+		if ~isempty(tWait) && tNow < tWait
 			bCorrect = [];
 			tResponse = [];
 			mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_CRITICAL);
@@ -175,10 +171,9 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		end
 		
 		tResponse = tNow;
+        tWait = tNext;
 		bCorrect = conditional(any(kButton ~= kCorrect), false, true);
 		
-		arrResponse(kRun,kBlock,kTrial) = true;
-		mwpi.Experiment.Info.Set('mwpi','bTaskResponse',arrResponse);
 		% show feedback
 		if bCorrect
 			mwpi.Experiment.Show.Texture(hTaskYes{kTrial});
@@ -190,22 +185,17 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 				
 	end
 %------------------------------------------------------------------%
-	function [bAbort, bCorrect, tResponse] = DoRecall(kBlock, tNow, ~)		
+	function [bAbort, bCorrect, tResponse] = DoRecall(kBlock, tNow, tNext)		
 		bAbort = false;
 		kCorrect = cell2mat(mwpi.Experiment.Input.Get(conditional(mwpi.rMatch(kRun,kBlock),'match','noMatch')));
 		
-		arrResponse = mwpi.Experiment.Info.Get('mwpi','bRecallResponse');
-		if isempty(arrResponse)
-			arrResponse = false(mwpi.maxRun, mwpi.nBlock);
-		end
-		
 		% if a response has been logged, don't check for another.
-		if arrResponse(kRun,kBlock)
+        if ~isempty(tWait) && tNow < tWait
 			bCorrect = [];
 			tResponse = [];
 			mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_CRITICAL);
 			return
-		end
+        end
 		
 		% check for a response
 		[bResponse,~,~,kButton] = mwpi.Experiment.Input.DownOnce('response');
@@ -216,10 +206,9 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		end
 		
 		tResponse = tNow;
+        tWait = tNext;
 		bCorrect = conditional(any(kButton ~= kCorrect), false, true);	
 		
-		arrResponse(kRun,kBlock) = true;
-		mwpi.Experiment.Info.Set('mwpi','bRecallResponse',arrResponse);
 		% show feedback
 		if bCorrect
 			mwpi.Experiment.Show.Texture(hRecallYes);
