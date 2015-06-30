@@ -92,28 +92,28 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 						repmat([false;false;true(mwpi.RSVPLength+1,1);false],mwpi.nBlock,1)
 						];
 	
-	tResponseStimuli = tShowTemp(bResponseStimuli);
-	tNextStimuli = tShowTemp(find(bResponseStimuli) + 1);
+	tNextStimuli = tShowTemp(bResponseStimuli);
 	
 	% insert a function call after each response stimulus to determine when to show feedback.
 	tShow = tShowTemp;
-	tShow(bResponseStimuli) = cellfun(@(tResponse,tNext) {tResponse; @(tNow) MoveToFeedback(tNow, tNext)},...
-		tResponseStimuli, tNextStimuli, 'uni',false);
+	tShow(bResponseStimuli) = cellfun(@(tNext) {@(tNow) MoveToFeedback(tNow, tNext)
+                                                tNext},...
+		tNextStimuli, 'uni',false);
 	
 	tShow = cellnestflatten(tShow);
 	
 	fwait = arrayfun(@(kBlock) [{@(tNow,tNext) DoRest(kBlock,tNow,tNext)}
-								{false}
-								{false}
+								{@WaitDefault}
+								{@WaitDefault}
 								cellnestflatten(arrayfun(@(kTrial) ...
 									 {@(tNow,tNext) DoTask(kBlock,kTrial,tNow,tNext)
-									 false
+									 @WaitDefault
 									 },...
 									(1:mwpi.RSVPLength)','uni',false))
 								{@(tNow,tNext) DoRecall(kBlock,tNow,tNext)}
-								{false}
+								{@WaitDefault}
 								], (1:mwpi.nBlock)','uni',false);
-	fwait = vertcat(fwait{:},false);
+	fwait = vertcat(fwait{:},{@WaitDefault});
 	
 	% scanner starts
 	tRun = MWPI.Param('time','run');
@@ -172,11 +172,21 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		end
 	end
 %--------------------------------------------------------------------%
-	function [bAbort, bCorrect, tResponse] = DoRest(kBlock, ~, tNext)				
-		bAbort = false;
-		bCorrect = [];
-		tResponse = [];
-		
+    function [bAbort, bCorrect, tResponse] = WaitDefault(~, tNext)
+        % wait and perform tasks in the background
+        
+        bAbort = false;
+        bCorrect = [];
+        tResponse = [];
+        
+        tNextms = mwpi.Experiment.Scanner.TR2ms(tNext);
+        
+        WaitSecs(0.001);
+        mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_LOW, tNextms);
+    end
+%--------------------------------------------------------------------%
+	function [bAbort, bCorrect, tResponse] = DoRest(kBlock, tNow, tNext)				
+				
 		% check if textures have been prepared
         persistent lastPrepared; % [kRun kBlock] of last set of textures prepared
 		if isempty(lastPrepared) || ~all(lastPrepared == [kRun,kBlock])
@@ -186,8 +196,7 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		end
 		
 		% wait
-		mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_IDLE, ...
-			mwpi.Experiment.Scanner.TR2ms(tNext));
+		[bAbort, bCorrect, tResponse] = WaitDefault(tNow, tNext);
 	end
 %-------------------------------------------------------------------%
 	function [bAbort, bCorrect, tResponse] = DoTask(kBlock, kTrial, tNow, ~)
@@ -200,7 +209,6 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		if bResponse
 			bCorrect = [];
 			tResponse = [];
-			mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_CRITICAL);
 			return
 		end
 		
@@ -227,7 +235,6 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
         if bResponse
 			bCorrect = [];
 			tResponse = [];
-			mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_CRITICAL);
 			return
         end
 		
