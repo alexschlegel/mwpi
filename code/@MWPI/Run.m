@@ -93,11 +93,12 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 						];
 	
 	tResponseStimuli = tShowTemp(bResponseStimuli);
+	tNextStimuli = tShowTemp(find(bResponseStimuli) + 1);
 	
 	% insert a function call after each response stimulus to determine when to show feedback.
 	tShow = tShowTemp;
-	tShow(bResponseStimuli) = cellfun(@(t) {t; @(tNow) MoveToFeedback(tNow, tShowTemp{t+1})},...
-		tResponseStimuli, 'uni',false);
+	tShow(bResponseStimuli) = cellfun(@(tResponse,tNext) {tResponse; @(tNow) MoveToFeedback(tNow, tNext)},...
+		tResponseStimuli, tNextStimuli, 'uni',false);
 	
 	tShow = cellnestflatten(tShow);
 	
