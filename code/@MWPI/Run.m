@@ -63,6 +63,7 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 
 	trialSequence = arrayfun(@(kTrial) ...
 						{hTask{kTrial}
+                         hTask{kTrial} % buffer to allow correct feedback
 						 {@ShowTaskFeedback, kTrial}
 						}, ...
 				  (1:mwpi.RSVPLength)','uni',false);
@@ -73,6 +74,7 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 				  {{'Blank'}}
 				  vertcat(trialSequence{:})
 				  hRecall
+                  hRecall % buffer to allow correct feedback
 				  {@ShowRecallFeedback}
 				  ], mwpi.nBlock,1)
 		  {{'Blank'}} % post-run
@@ -108,6 +110,7 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 	% insert a function call after each response stimulus to determine when to show feedback.
 	tShow = tShowTemp;
 	tShow(bResponseStimuli) = cellfun(@(tNext) {@(tNow) MoveToFeedback(tNow, tNext)
+                                                @(tNow) deal(false, true) % move immediately
                                                 tNext},...
 		tNextStimuli, 'uni',false);
 	
@@ -119,10 +122,12 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 								{@WaitDefault} % blank
 								cellnestflatten(arrayfun(@(kTrial) ...
 									 {@(tNow,tNext) DoTask(mwpi.match(kRun,kBlock,kTrial),tNow,tNext)
+                                     false
 									 @WaitDefault
 									 },...
 									(1:mwpi.RSVPLength)','uni',false))
 								{@(tNow,tNext) DoTask(mwpi.rMatch(kRun,kBlock),tNow,tNext)}
+                                false
 								{@WaitDefault}
 								], (1:mwpi.nBlock)','uni',false);
 	fwait = vertcat(fwait{:},{@WaitDefault});
@@ -177,6 +182,7 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 		% move on if there has been a response or it's time for the next
 		% stimulus
 		if tNow >= tNext || bResponse
+            tNow-tNext
 			bResponse = false;
 			bShow = true;
 		else
@@ -190,6 +196,10 @@ mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
         bAbort = false;
         bCorrect = [];
         tResponse = [];
+        
+        % clear globals
+        bResponse = false;
+        bLastCorrect = [];
         
         tNextms = mwpi.Experiment.Scanner.TR2ms(tNext);
         
