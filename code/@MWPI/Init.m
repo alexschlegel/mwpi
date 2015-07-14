@@ -2,7 +2,8 @@ function Init(mwpi)
 % MWPI.Init
 %
 % Description: generate the sequence of v/w blocks, target shapes, and RSVP stream.
-% blockType = 'V' or 'W' - whether the block tests vision or working memory
+% blockType = '1' or '2' - whether the block tests vision or working memory
+%   ('1' = working memory, '2' = vision)
 % wShape	= the shape shown in the prompt at the start of a block
 % vShape	= the shape shown during a block (the target for V blocks)
 % rShape	= the shape shown during the recall screen (== wShape in 50% of blocks)
@@ -25,11 +26,11 @@ param.rsvpSeed = [0,0.1]; % 0 = 2 matches in block, 0.1 = 1 match
 % complete set. This could be changed, but I think this way might be better
 % becuase it is less predictable for the subject.
 
-[mwpi.blockType,param] = blockdesign('VW',mwpi.nBlock/2,mwpi.maxRun,param);
+[mwpi.blockType,param] = blockdesign(['1','2'],mwpi.nBlock/2,mwpi.maxRun,param);
 mwpi.wShape = param.wShape;
 mwpi.vShape = param.vShape;
 mwpi.rMatch = param.rMatch;
-mwpi.target = arrayfun(@(type,wshp,vshp) conditional(type == 'W',wshp,vshp),...
+mwpi.target = arrayfun(@(type,wshp,vshp) conditional(type == '1',wshp,vshp),...
 	mwpi.blockType, mwpi.wShape, mwpi.vShape);
 
 rsvpNum = cell2mat(arrayfun(@(seed) arrayfun(@(offset) seed + offset,...
