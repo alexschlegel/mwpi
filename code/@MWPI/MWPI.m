@@ -27,6 +27,10 @@ classdef MWPI < PTB.Object
 		stim;    % 32 x 1 cell of stimulus images
 		stimYes; % stim but colored green
 		stimNo;  % stim but colored red
+        indH;    % indices of stimuli flipped horizontally (e.g. stim(indH(1)) = stim(1) flipped horizontally)
+        indV;    % indices of stimuli flipped vertically
+        indR;    % indices of stimuli rotated right
+        indL;    % indices of stimuli rotated left
 		runsComplete; % runsComplete(n) == 1 if run n has been completed.
 		
 		% block design properties (generated with Init):
@@ -108,12 +112,20 @@ classdef MWPI < PTB.Object
 			colYes = mwpi.Experiment.Color.Get(MWPI.Param('color','yes'));
 			colNo = mwpi.Experiment.Color.Get(MWPI.Param('color','no'));
 			colBack = mwpi.Experiment.Color.Get(opt.background);
-			mwpi.stim = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colFore(1:3), ...
- 				colBack(1:3)), (0:31)', 'uni', false);
+			
+            [mwpi.stim, cIndH, cIndV, cIndR, cIndL] = ...
+                arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colFore(1:3), ...
+ 				colBack(1:3)), (1:32)', 'uni', false);
+            
+            mwpi.indH = cell2mat(cIndH);
+            mwpi.indV = cell2mat(cIndV);
+            mwpi.indR = cell2mat(cIndR);
+            mwpi.indL = cell2mat(cIndL);
+            
 			mwpi.stimYes = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colYes(1:3), ...
- 				colBack(1:3)), (0:31)', 'uni', false);
+ 				colBack(1:3)), (1:32)', 'uni', false);
 			mwpi.stimNo = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colNo(1:3), ...
- 				colBack(1:3)), (0:31)', 'uni', false);
+ 				colBack(1:3)), (1:32)', 'uni', false);
         end
         %-----------------------------------------------------------%
         function End(mwpi,varargin)

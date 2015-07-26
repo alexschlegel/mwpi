@@ -1,13 +1,14 @@
-function [im,b] = Stimulus(index,colFore,colBack)
+function [im,indHFlip,indVFlip,indRRot,indLRot] = Stimulus(index,colFore,colBack)
 % MWPI.Stim.Stimulus
 % 
 % Description:	render a stimulus
 % 
-% Syntax:	[im,b] = MWPI.Stim.Stimulus(shp,colFore,colBack)
+% Syntax:	[im,] = MWPI.Stim.Stimulus(index,colFore,colBack)
 % 
 % In:
-%	index	- the stimulus index (0:31)
-%				* bits 3-4 = shape
+%	index	- the stimulus index (1:32)
+%               Encoding: for the 5-bit integer n-1:
+%				* bits 3-4 = shape (rect1,rect2,pol1,pol2)
 %				* bits 1-2 = rotation (num of 90 degree CW rotations)
 %				* bit 0 = horizontal flip (yes or no)
 %	colFore - foreground color (RGB)
@@ -15,7 +16,11 @@ function [im,b] = Stimulus(index,colFore,colBack)
 %
 % Out:
 % 	im	- the stimulus image
-%	b	- the stimulus mask
+%   indHFlip - the index of the stimulus flipped horizontally
+%   indVFlip - the index of the stimulus flipped vertically
+%   indRRot - the index of the stimulus rotated to the right
+%   indLRot - the index of the stimulus rotated to the left
+%   
 % 
 % Updated: 2015-06-18 for MWPI
 % Copyright 2013 Alex Schlegel (schlegel@gmail.com).  This work is licensed
@@ -23,19 +28,27 @@ function [im,b] = Stimulus(index,colFore,colBack)
 % License.
 
 % calculate parameters
-shp = floor(index/8);
-rot = mod(floor(index/2),4);
-flip = conditional(mod(index, 2),'h',0);
+zIndex = index-1; % zero-based index
+shp = floor(zIndex/8);
+rot = mod(floor(zIndex/2),4);
+flip = conditional(mod(zIndex, 2),'h',0);
 
 switch shp
 	case 0%R1
-		[im,b]	= MWPI.Stim.Rect(1,rot,flip,colFore,colBack);
+		im	= MWPI.Stim.Rect(1,rot,flip,colFore,colBack);
 	case 1%R2
-		[im,b]	= MWPI.Stim.Rect(2,rot,flip,colFore,colBack);
+		im	= MWPI.Stim.Rect(2,rot,flip,colFore,colBack);
 	case 2%P1
-		[im,b]	= MWPI.Stim.Polar(1,rot,flip,colFore,colBack);
+		im	= MWPI.Stim.Polar(1,rot,flip,colFore,colBack);
 	case 3%P2
-		[im,b]	= MWPI.Stim.Polar(2,rot,flip,colFore,colBack);
+		im	= MWPI.Stim.Polar(2,rot,flip,colFore,colBack);
 	otherwise
 		error('wtf?');
+end
+
+indHFlip = bitxor(zIndex, 1) + 1;
+indVFlip = bitxor(zIndex, 5) + 1;
+indRRot = shp*8 + mod(rot+1,4)*2 + (flip == 'h') + 1;
+indLRot = shp*8 + mod(rot-1,4)*2 + (flip == 'h') + 1;
+
 end
