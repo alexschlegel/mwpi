@@ -1,35 +1,36 @@
-function [im,b] = Polar(shp,rot,flip,varargin)
-% GO.Stim.Polar
+function [im,b] = Polar(shp,rot,flip,colFore,colBack,varargin)
+% MWPI.Stim.Polar
 % 
 % Description:	create a polar stimulus image
 % 
-% Syntax:	[im,b] = GO.Stim.Polar(shp,rot,flip,[col]=<default>,[s]=<default>)
+% Syntax:	[im,b] = MWPI.Stim.Polar(shp,rot,flip,colFore,colBack,[s]=<default>)
 % 
 % In:
 % 	shp		- the shape number
 %	rot		- the number of 90 degree CW rotations (negative for CCW)
 %	flip	- flip: 0 for none, 'h' for H flip, 'v' for V flip
-%	[col]	- the color
+%	colFore	- foreground color (RGB)
+%	colBack	- background color (RGB)
 %	[s]		- the size of the output image
 % 
 % Out:
 % 	im	- the output image
 %	b	- the binary image
 % 
-% Updated: 2013-09-18
+% Updated: 2015-05-30 for MWPI
 % Copyright 2013 Alex Schlegel (schlegel@gmail.com).  This work is licensed
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
-[col,s]	= ParseArgs(varargin,GO.Param('color','fore'),GO.Param('size','stim'));
+s = ParseArgs(varargin,MWPI.Param('size','stimpx'));
 
 %the shape
-	shp	= GO.Param('shape','polar',shp);
+	shp	= MWPI.Param('shape','polar',shp);
 	
 	%polar coordinates
 		xy		= GetInterval(-1,1,s);
 		[x,y]	= meshgrid(xy,xy);
 		
-		r	= (x.^2 + y.^2).^GO.Param('shape','polar_exp');
+		r	= (x.^2 + y.^2);
 		a	= atan2(y,x);
 		
 		shell	= 4-floor(4*r);
@@ -46,7 +47,7 @@ function [im,b] = Polar(shp,rot,flip,varargin)
 	end
 %flip it
 	switch flip
-		case 0%nothing to do
+		case 0 %nothing to do
 		case 'h'%horizontal flip
 			b	= fliplr(b);
 		case 'v'%vertical flip
@@ -56,8 +57,6 @@ function [im,b] = Polar(shp,rot,flip,varargin)
 	b	= imrotate(b,-rot*90);
 
 %RGB image
-	colBack	= GO.Param('color','back');
-	colFore	= col;
 	col		= im2double([colBack; colFore]);
 	
 	im	= ind2rgb(uint8(b),col);
