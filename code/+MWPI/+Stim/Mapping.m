@@ -1,31 +1,29 @@
-function im = Mapping(id)
-% GO.Stim.Mapping
+function im = Mapping(map_stim, map_op)
+% MWPI.Stim.Mapping
 % 
 % Description:	construct a mapping image for the specified subject
 % 
-% Syntax:	im = GO.Stim.Mapping(id)
+% Syntax:	im = MWPI.Stim.Mapping(map_stim, map_op)
+%
+% In:		map_stim: mapping of cues (A-D) to stimuli (R1, R2, P1, P2)
+%			map_op:	  mapping of cues (1-4) to operations (CW, CCW, H, V)
 % 
-% Updated: 2013-09-19
+% Updated: 2015-07-28 for mwpi
 % Copyright 2013 Alex Schlegel (schlegel@gmail.com).  This work is licensed
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
-global strDirBase
 
-strPathSubject	= PathUnsplit(DirAppend(strDirBase,'data'),id,'mat');
-
-ifo	= getfield(load(strPathSubject),'ifoSubject');
-
-s	= GO.Param('size','stim');
+s	= MWPI.Param('size','stimpx');
 pad	= 20;
 
 %stimuli
-	[imStim,bStim]	= arrayfun(@(k) GO.Stim.Stimulus(k,'map',ifo.map_stim),(1:4)','uni',false);
+	[~,bStim]	= arrayfun(@(k) MWPI.Stim.Stimulus(k,'map',map_stim),(1:4)','uni',false);
 	bStim			= cellfun(@(b) imPad(b,0,s+pad,s+pad),bStim,'uni',false);
 %operations
 	cOp		= {'cw';'ccw';'h';'v'};
-	cOp		= cOp(ifo.map_op);
+	cOp		= cOp(map_op);
 	
-	strDirImage	= DirAppend(strDirBase,'code','@GridOp','image');
+	strDirImage	= DirAppend(strDirBase,'code','@MWPI','image');
 	cPathOp	= cellfun(@(op) PathUnsplit(strDirImage,op,'bmp'),cOp,'uni',false);
 	bOp		= cellfun(@(f) imPad(~imread(f),0,s+pad,s+pad),cPathOp,'uni',false);
 	

@@ -27,10 +27,6 @@ classdef MWPI < PTB.Object
 		stim;    % 32 x 1 cell of stimulus images
 		stimYes; % stim but colored green
 		stimNo;  % stim but colored red
-        indH;    % indices of stimuli flipped horizontally (e.g. stim(indH(1)) = stim(1) flipped horizontally)
-        indV;    % indices of stimuli flipped vertically
-        indR;    % indices of stimuli rotated right
-        indL;    % indices of stimuli rotated left
 		runsComplete; % runsComplete(n) == 1 if run n has been completed.
 		
 		% block design properties (generated with Init):
