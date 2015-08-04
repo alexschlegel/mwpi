@@ -23,7 +23,6 @@ classdef MWPI < PTB.Object
 		nRun; % number of runs expected to be performed
 		maxRun; % a bit higher than nRun, in case something gets interrupted and we need some new runs.
 		nBlock;  % per run
-		RSVPLength;
 		stim;    % 32 x 1 cell of stimulus images
 		stimYes; % stim but colored green
 		stimNo;  % stim but colored red
@@ -81,8 +80,7 @@ classdef MWPI < PTB.Object
 			
 			mwpi.nRun = MWPI.Param('exp','nRun');
 			mwpi.maxRun = MWPI.Param('exp','maxRun');
-			mwpi.nBlock = MWPI.Param('exp','blocks');
-			mwpi.RSVPLength = MWPI.Param('exp','RSVPLength');
+			mwpi.nBlock = MWPI.Param('exp','nBlock');
 			
 			% if not done yet, initialize block design
 			if ~isfield(mwpi.Experiment.Info.GetAll, 'mwpi')

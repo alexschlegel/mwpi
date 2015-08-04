@@ -1,14 +1,14 @@
 function [rot,flip] = Operate(op,varargin)
-% GO.Operate
+% MWPI.Operate
 % 
 % Description:	calculate the output of an operation
 % 
-% Syntax:	[rot,flip] = GO.Operate(op,<options>)
+% Syntax:	[rot,flip] = MWPI.Operate(op,<options>)
 % 
 % In:
 %	op			- the operation (1:4)
 %	<options>:
-%		map:		([1;3;2;4]) a 4x1 array specifying a mapping from (1:4) to
+%		map:		([1;2;3;4]) a 4x1 array specifying a mapping from (1:4) to
 %					the actual operation, ordered as (CW,CCW,H,V)
 %		initrot:	(0) the initial rotation
 %		initflip:	(0) the initial flip
@@ -17,12 +17,12 @@ function [rot,flip] = Operate(op,varargin)
 % 	rot		- the output rotation
 %	flip	- the output flip
 % 
-% Updated: 2013-09-24
+% Updated: 2015-08-04 for MWPI
 % Copyright 2013 Alex Schlegel (schlegel@gmail.com).  This work is licensed
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
 opt	= ParseArgs(varargin,...
-		'map'		, [1;3;2;4]	, ...
+		'map'		, [1;2;3;4]	, ...
 		'initrot'	, 0			, ...
 		'initflip'	, 0			  ...
 		);

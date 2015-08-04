@@ -10,7 +10,7 @@ function [im,b] = Stimulus(shp,varargin)
 %	<options>:
 %		map:		([1;2;3;4]) a 4x1 array specifying a mapping from (1:4) to
 %					the actual stimulus, ordered as (R1,R2,P1,P2)
-%		rotation:	(0) the stimulus rotation (0:3)
+%		rotation:	(0) the stimulus rotation (0:3) (number of 90 degree CW rotations
 %		flip:		(0) the stimulus flip ([0 'h' 'v'])
 % 
 % Out:
