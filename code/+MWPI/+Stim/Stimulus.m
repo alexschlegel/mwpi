@@ -8,7 +8,7 @@ function [im,b] = Stimulus(shp,varargin)
 % In:
 %	shp		- the stimulus shape (1:4)
 %	<options>:
-%		map:		([1;2;3;4]) a 4x1 array specifying a mapping from (1:4) to
+%		map:		([1;3;2;4]) a 4x1 array specifying a mapping from (1:4) to
 %					the actual stimulus, ordered as (R1,R2,P1,P2)
 %		rotation:	(0) the stimulus rotation (0:3) (number of 90 degree CW rotations
 %		flip:		(0) the stimulus flip ([0 'h' 'v'])
@@ -22,7 +22,7 @@ function [im,b] = Stimulus(shp,varargin)
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
 opt	= ParseArgs(varargin,...
-		'map'		, [1;2;3;4]	, ...
+		'map'		, [1;3;2;4]	, ...
 		'rotation'	, 0			, ...
 		'flip'		, 0			  ...
 		);
