@@ -7,39 +7,19 @@ function Run(mwpi, varargin)
 %
 
 % calculate which run to execute
-skippedRuns = find(~mwpi.runsComplete);
-if numel(skippedRuns) == 0
-	nextRun = numel(mwpi.runsComplete) + 1;
-else
-	nextRun = skippedRuns(1);
+sResults = mwpi.Experiment.Info.Get('mwpi','result');
+kRun = numel(sResults) + 1;
+
+if kRun > mwpi.nRun
+    bContinue = mwpi.Experiment.Prompt.YesNo(['Current run (' num2str(kRun) ...
+        ') exceeds planned number of runs (' num2str(mwpi.nRun) '). Continue?'], ...
+        'mode', 'command_window');
+    if ~bContinue
+        return;
+    end
 end
 
-% Ask which run to run
-while true
-	kRun = mwpi.Experiment.Prompt.Ask('Which run?', ...
-								'mode','command_window', ...
-								'default',nextRun);
-
-	if ~isa(kRun,'numeric') || kRun < 1 || floor(kRun) ~= ceil(kRun)
-		warning('Run must be a positive integer.');
-	else
-		break;
-	end
-end
-
-if kRun > mwpi.maxRun
-	error('Run must be between 1 and %d, inclusive.', mwpi.maxRun);
-elseif kRun > mwpi.nRun
-	bCont = mwpi.Experiment.Prompt.YesNo(['Run exceeds experimental design of ',...
-			num2str(mwpi.nRun), ' runs. Continue?'],...
-			'mode','command_window',...
-			'default','n');
-	if ~bCont
-		return
-	end
-end
-
-mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
+mwpi.Experiment.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
 
 % perform the run
 
@@ -84,7 +64,6 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun)]);
 	mwpi.Experiment.Scanner.StopScan;
 
 % save results
-sResults = mwpi.Experiment.Info.Get('mwpi','result');
 if isempty(sResults)
 	sResults = cRun;
 else
@@ -107,8 +86,6 @@ mwpi.Experiment.Window.CloseTexture('recallNo');
 
 % finish up
 mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
-mwpi.runsComplete(kRun) = true;
-mwpi.Experiment.Info.Set('mwpi','runsComplete',mwpi.runsComplete);
 
 
 %--------------------------------------------------------------------%

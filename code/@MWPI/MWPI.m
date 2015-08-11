@@ -7,9 +7,11 @@ classdef MWPI < PTB.Object
 %
 %           subfunctions:
 %               Start(<options>):   start the object
-%				Init:				calculate block design
+%				Init:				set up the experiment
 %               End:                end the object
+%               PrepRun:            prepare a MWPI run
 %               Run:                execute a MWPI run
+%               DeleteRun:          delete data from a run (in case something bad happens)
 %
 % In:
 %   <options>:
@@ -20,23 +22,8 @@ classdef MWPI < PTB.Object
     % PUBLIC PROPERTIES-------------------------------------------------%
     properties
         Experiment;
-		nRun; % number of runs expected to be performed
-		maxRun; % a bit higher than nRun, in case something gets interrupted and we need some new runs.
+		nRun;
 		nBlock;  % per run
-		stim;    % 32 x 1 cell of stimulus images
-		stimYes; % stim but colored green
-		stimNo;  % stim but colored red
-		runsComplete; % runsComplete(n) == 1 if run n has been completed.
-		
-		% block design properties (generated with Init):
-		blockType;  % maxRun x nBlock char array: 'V' = visual, 'W' = working memory
-		wShape; % maxRun x nBlock int array; shape shown at start and end of block
-		vShape; % maxRun x nBlock int array; shape shown during block
-		rShape; % maxRun x nBlock int array; shape shown during recall
-		target; % maxRun x nBlock int array; correct shape for each block
-		rsvp;   % maxRun x nBlock x RSVPLength int array for RSVP stream
-		match;  % maxRun x nBlock x RSVPLength logical array; whether each RSVP shape is a match
-		rMatch; % maxRun x nBlock logical array; true if rShape == wShape
         
         % running reward total
         reward;
@@ -57,9 +44,13 @@ classdef MWPI < PTB.Object
         function mwpi = MWPI(varargin)
             mwpi = mwpi@PTB.Object([],'mwpi');
             
+            mwpi.nRun = MWPI.Param('exp','nRun');
+			mwpi.maxRun = MWPI.Param('exp','maxRun');
+			mwpi.nBlock = MWPI.Param('exp','nBlock');
+            
             mwpi.argin = varargin;
             
-            % parse the inputs
+            % build opt struct for experiment
             opt = ParseArgs(varargin, ...
                 'debug' ,   0 ...
                 );
@@ -67,8 +58,6 @@ classdef MWPI < PTB.Object
             opt.context = 'fmri';
             opt.tr = MWPI.Param('time','tr');
             opt.input_scheme = 'lr';			
-            
-            % window
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');
             opt.text_family = MWPI.Param('text','family');
@@ -78,17 +67,9 @@ classdef MWPI < PTB.Object
             % create experiment
             mwpi.Experiment = PTB.Experiment(cOpt{:});
             mwpi.Start;
-			
-			% define keys
-			mwpi.Experiment.Input.Set('response',{'left','right'});
-			mwpi.Experiment.Input.Set('match','left');
-			mwpi.Experiment.Input.Set('noMatch','right');
-			
-			mwpi.nRun = MWPI.Param('exp','nRun');
-			mwpi.maxRun = MWPI.Param('exp','maxRun');
-			mwpi.nBlock = MWPI.Param('exp','nBlock');
-			
             
+            % initialize experiment
+            mwpi.Init;           
             
 % 			% if not done yet, initialize block design
 % 			if ~isfield(mwpi.Experiment.Info.GetAll, 'mwpi')
@@ -109,25 +90,8 @@ classdef MWPI < PTB.Object
 % 				mwpi.runsComplete = mwpi.Experiment.Info.Get('mwpi','runsComplete');
 % 			end
 % 			
-% 			% generate stimuli
-% 			colFore = mwpi.Experiment.Color.Get(MWPI.Param('color','fore'));
-% 			colYes = mwpi.Experiment.Color.Get(MWPI.Param('color','yes'));
-% 			colNo = mwpi.Experiment.Color.Get(MWPI.Param('color','no'));
-% 			colBack = mwpi.Experiment.Color.Get(opt.background);
 % 			
-%             [mwpi.stim, cIndH, cIndV, cIndR, cIndL] = ...
-%                 arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colFore(1:3), ...
-%  				colBack(1:3)), (1:32)', 'uni', false);
-%             
-%             mwpi.indH = cell2mat(cIndH);
-%             mwpi.indV = cell2mat(cIndV);
-%             mwpi.indR = cell2mat(cIndR);
-%             mwpi.indL = cell2mat(cIndL);
-%             
-% 			mwpi.stimYes = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colYes(1:3), ...
-%  				colBack(1:3)), (1:32)', 'uni', false);
-% 			mwpi.stimNo = arrayfun(@(ind) MWPI.Stim.Stimulus(ind,colNo(1:3), ...
-%  				colBack(1:3)), (1:32)', 'uni', false);
+          
         end
         %-----------------------------------------------------------%
         function End(mwpi,varargin)

@@ -1,26 +1,31 @@
 function Init(mwpi)
 % MWPI.Init
 %
-% Description: Generate and save the parameters for each block of the experiment.
+% Description: set up the experiment
 %
 % Syntax: mwpi.Init;
 %
 % Updated: 2015-08-10
 
 % generate mappings
-% figure
-figMap = mwpi.Experiment.Subject.Get('map_stim');
-if isempty(figMap)
-    figMap = randomize((1:4)');
-    mwpi.Experiment.Subject.Set('map_stim',figMap);
-end
+    % figure
+    figMap = mwpi.Experiment.Subject.Get('map_stim');
+    if isempty(figMap)
+        figMap = randomize((1:4)');
+        mwpi.Experiment.Subject.Set('map_stim',figMap);
+    end
 
-% operation
-opMap = mwpi.Experiment.Subject.Get('map_op');
-if isempty(opMap)
-    opMap = randomize((1:4)');
-    mwpi.Experiment.Subject.Set('map_op',opMap);
-end
+    % operation
+    opMap = mwpi.Experiment.Subject.Get('map_op');
+    if isempty(opMap)
+        opMap = randomize((1:4)');
+        mwpi.Experiment.Subject.Set('map_op',opMap);
+    end
+
+% define keys
+    mwpi.Experiment.Input.Set('response', MWPI.Param('key','response'));
+    mwpi.Experiment.Input.Set('match', MWPI.Param('key','match'));
+    mwpi.Experiment.Input.Set('noMatch', MWPI.Param('key','noMatch'));
 
 % from gridop
 %load some images
