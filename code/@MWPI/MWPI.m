@@ -9,8 +9,8 @@ classdef MWPI < PTB.Object
 %               Start(<options>):   start the object
 %				Init:				set up the experiment
 %               End:                end the object
-%               PrepRun:            prepare a MWPI run
-%               Run:                execute a MWPI run
+%               PrepRun:            prepare an MWPI run
+%               Run:                execute an MWPI run
 %               DeleteRun:          delete data from a run (in case something bad happens)
 %
 % In:
@@ -45,7 +45,6 @@ classdef MWPI < PTB.Object
             mwpi = mwpi@PTB.Object([],'mwpi');
             
             mwpi.nRun = MWPI.Param('exp','nRun');
-			mwpi.maxRun = MWPI.Param('exp','maxRun');
 			mwpi.nBlock = MWPI.Param('exp','nBlock');
             
             mwpi.argin = varargin;
@@ -70,28 +69,7 @@ classdef MWPI < PTB.Object
             
             % initialize experiment
             mwpi.Init;           
-            
-% 			% if not done yet, initialize block design
-% 			if ~isfield(mwpi.Experiment.Info.GetAll, 'mwpi')
-% 				mwpi.Init;
-% 				mwpi.Experiment.Info.Set('mwpi','runsComplete',[]);
-% 				mwpi.runsComplete = [];
-% 			else
-% 				% load existing values
-% 				
-% 				mwpi.blockType = mwpi.Experiment.Info.Get('mwpi','blockType');
-% 				mwpi.wShape = mwpi.Experiment.Info.Get('mwpi','wShape');
-% 				mwpi.vShape = mwpi.Experiment.Info.Get('mwpi','vShape');
-% 				mwpi.rShape = mwpi.Experiment.Info.Get('mwpi','rShape');
-% 				mwpi.target = mwpi.Experiment.Info.Get('mwpi','target');
-% 				mwpi.rsvp = mwpi.Experiment.Info.Get('mwpi','rsvp');
-% 				mwpi.match = mwpi.Experiment.Info.Get('mwpi','match');
-% 				mwpi.rMatch = mwpi.Experiment.Info.Get('mwpi','rMatch');
-% 				mwpi.runsComplete = mwpi.Experiment.Info.Get('mwpi','runsComplete');
-% 			end
-% 			
-% 			
-          
+                      
         end
         %-----------------------------------------------------------%
         function End(mwpi,varargin)

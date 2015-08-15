@@ -1,10 +1,17 @@
 function Run(mwpi, varargin)
 % Run - do an MWPI run.
 % 
-% Syntax: MWPI.Run
+% Syntax: MWPI.Run(<options>)
+%
+% In:
+%	options:
+%		'mapping'	(true) Show the mapping before the run, until the scanner starts
 %
 % Updated: 2015-06-24
 %
+
+% parse arguments
+opt = ParseArgs(varargin, 'mapping', true);
 
 % calculate which run to execute
 sResults = mwpi.Experiment.Info.Get('mwpi','result');
@@ -21,7 +28,18 @@ end
 
 mwpi.Experiment.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
 
+% show the mapping
+if opt.mapping
+	mwpi.Mapping('wait',false);
+	mwpi.Experiment.Window.Flip;
+end
+
+% get run ready
+mwpi.PrepRun;
+
 % perform the run
+
+%--------------------------EDIT LINE-------------------------------------%
 
 	% shared variables
     bResponse = false;
@@ -125,7 +143,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
 	function ShowTaskFeedback(kTrial, varargin)
 		% Show the appropriate task feedback screen
 		
-		opt = ParseArgs(varargin, 'window', []);
+		myOpt = ParseArgs(varargin, 'window', []);
 		
 		if isempty(bLastCorrect)
 			arr_hFeedback = arr_hTask;
@@ -137,7 +155,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
 		
 		bLastCorrect = [];
 		
-		mwpi.Experiment.Show.Texture(arr_hFeedback(kTrial), 'window',opt.window);
+		mwpi.Experiment.Show.Texture(arr_hFeedback(kTrial), 'window',myOpt.window);
         
         bClearSerialWaitTask = true; % for next task
 	end
@@ -145,7 +163,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
 	function ShowRecallFeedback(varargin)
 		% show the appropriate recall feedback screen
 		
-		opt = ParseArgs(varargin, 'window', []);
+		myOpt = ParseArgs(varargin, 'window', []);
 		
 		if isempty(bLastCorrect)
 			hFeedback = hRecall;
@@ -157,7 +175,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
 		
 		bLastCorrect = [];
 		
-		mwpi.Experiment.Show.Texture(hFeedback, 'window', opt.window);
+		mwpi.Experiment.Show.Texture(hFeedback, 'window', myOpt.window);
         
         bClearSerialWaitTask = true; % for next task
     end
