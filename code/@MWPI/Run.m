@@ -1,7 +1,7 @@
 function Run(mwpi, varargin)
 % Run - do an MWPI run.
 % 
-% Syntax: MWPI.Run(<options>)
+% Syntax: mwpi.Run(<options>)
 %
 % In:
 %	options:
@@ -31,81 +31,80 @@ mwpi.Experiment.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]
 % show the mapping
 if opt.mapping
 	mwpi.Mapping('wait',false);
-	mwpi.Experiment.Window.Flip;
+	mwpi.Experiment.Window.Flip('waiting for scanner');
 end
+
+% scanner starts
+tRun = MWPI.Param('time','run');
+mwpi.Experiment.Scanner.StartScan(tRun);
 
 % get run ready
 mwpi.PrepRun;
 
 % perform the run
 
-%--------------------------EDIT LINE-------------------------------------%
-
 	% shared variables
-    bResponse = false;
-	bLastCorrect = [];
-    bClearSerialWaitTask = true;
-    bTexturesPrepared = false;
+    kBlock = 0;
+    nCorrect = 0;
+    sRun.res = [];
+%     bResponse = false;
+% 	bLastCorrect = [];
+%     bClearSerialWaitTask = true;
+%     bTexturesPrepared = false;
 		
 	% initialize texture handles
-	hPrompt = mwpi.Experiment.Window.OpenTexture('prompt');
-	arr_hTask = arrayfun(@(i) mwpi.Experiment.Window.OpenTexture(['task',num2str(i)]),...
-				(1:mwpi.RSVPLength)');
-	arr_hTaskYes = arrayfun(@(i) mwpi.Experiment.Window.OpenTexture(['taskYes',num2str(i)]),...
-				(1:mwpi.RSVPLength)');
-	arr_hTaskNo = arrayfun(@(i) mwpi.Experiment.Window.OpenTexture(['taskNo',num2str(i)]),...
-				(1:mwpi.RSVPLength)');
-	hRecall = mwpi.Experiment.Window.OpenTexture('recall');
-	hRecallYes = mwpi.Experiment.Window.OpenTexture('recallYes');
-	hRecallNo = mwpi.Experiment.Window.OpenTexture('recallNo');
-
+	sHandle.prompt = mwpi.Experiment.Window.OpenTexture('prompt');
+	sHandle.task = mwpi.Experiment.Window.OpenTexture('task');
+    sHandle.probe = mwpi.Experiment.Window.OpenTexture('probe');
+    sHandle.probeYes = mwpi.Experiment.Window.OpenTexture('probeYes');
+    sHandle.probeNo = mwpi.Experiment.Window.OpenTexture('probeNo');
+    sHandle.done = mwpi.Experiment.Window.OpenTexture('done');
 
     % set up sequence %
-    cX = SetupStimuli;
-    tShow = SetupTiming;
-    fwait = SetupWaitFuncs;
-    	
-	% scanner starts
-	tRun = MWPI.Param('time','run');
-	mwpi.Experiment.Scanner.StartScan(tRun);
+    cF = [  repmat({@DoRest; @DoTrial; @DoFeedback}, [mwpi.nBlock, 1])
+            {@DoDone}
+          ];
+      
+    trMapping = MWPI.Param('time','mapping');
+    trBlock = MWPI.Param('time', 'block');
+    trFeedback = MWPI.Param('time','feedback');
+    trRest = MWPI.Param('time','rest');
+    trPost = MWPI.Param('time','postrun');
+      
+    tSequence = cumsum([ trMapping
+                         repmat([trBlock; trFeedback; trRest], [mwpi.nBlock-1,1])
+                         trTrial
+                         trFeedback
+                         trPost
+                         ]) + 1;
 								
 	% go!
-	[cRun.tStart, cRun.tEnd, cRun.tShow, cRun.bAbort, cRun.bCorrect, cRun.tResponse] = ...
-		mwpi.Experiment.Show.Sequence(cX,tShow, ...
+    
+	[sRun.tStart, sRun.tEnd, sRun.tSequence, sRun.bAbort] = ...
+		mwpi.Experiment.Sequence.Linear(cF,tSequence, ...
 		'tstart',1,			...
-		'tbase','absolute', ...
-		'fixation',false,	...
-		'fwait', fwait		...
+		'tbase','absolute' ...
 		);
 	
 	% scanner ends
 	mwpi.Experiment.Scanner.StopScan;
 
-% save results
+% save results 
 if isempty(sResults)
-	sResults = cRun;
+	sResults = sRun;
 else
-	sResults(end+1) = cRun;
+	sResults(end+1) = sRun;
 end
 mwpi.Experiment.Info.Set('mwpi','result',sResults);
 mwpi.Experiment.Info.AddLog('Results saved.');
 
 % close textures
-mwpi.Experiment.Window.CloseTexture('prompt');
-arrayfun(@(i) mwpi.Experiment.Window.CloseTexture(['task',num2str(i)]),...
-			(1:mwpi.RSVPLength)');
-arrayfun(@(i) mwpi.Experiment.Window.CloseTexture(['taskYes',num2str(i)]),...
-			(1:mwpi.RSVPLength)');
-arrayfun(@(i) mwpi.Experiment.Window.CloseTexture(['taskNo',num2str(i)]),...
-			(1:mwpi.RSVPLength)');
-mwpi.Experiment.Window.CloseTexture('recall');
-mwpi.Experiment.Window.CloseTexture('recallYes');
-mwpi.Experiment.Window.CloseTexture('recallNo');
+cellfun(@(tName) mwpi.Experiment.Window.CloseTexture(tName), fieldnames(sHandle));
 
 % finish up
 mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
 
-
+%-------------------------------EDIT LINE----------------------------%
 %--------------------------------------------------------------------%
     function cX = SetupStimuli
         

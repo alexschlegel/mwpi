@@ -37,8 +37,16 @@ function Init(mwpi)
 	cOp		= {'cw';'ccw';'h';'v'};
 	cPathOp	= cellfun(@(op) PathUnsplit(strDirImage,op,'bmp'),cOp,'uni',false);
 	mwpi.op	= cellfun(@(f) ind2rgb(uint8(~imread(f)),[MWPI.Param('color','back');MWPI.Param('color','fore')]),cPathOp,'uni',false);
-%set the initial reward
-	mwpi.reward	= MWPI.Param('reward','base');
 
+%set the reward
+    % check if we're resuming an existing session
+    mwpi.reward = mwpi.Experiment.Info.Get('mwpi','reward');
+    
+    if isempty(mwpi.reward)
+        mwpi.reward	= MWPI.Param('reward','base');
+        mwpi.Experiment.Info.Set('mwpi','reward',mwpi.reward);
+    end
+
+mwpi.Experiment.AddLog('initialized experiment');
 
 end
