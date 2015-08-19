@@ -9,17 +9,17 @@ function Init(mwpi)
 
 % generate mappings
     % figure
-    figMap = mwpi.Experiment.Subject.Get('map_stim');
-    if isempty(figMap)
-        figMap = randomize((1:4)');
-        mwpi.Experiment.Subject.Set('map_stim',figMap);
+    mwpi.figMap = mwpi.Experiment.Subject.Get('map_stim');
+    if isempty(mwpi.figMap)
+        mwpi.figMap = randomize((1:4)');
+        mwpi.Experiment.Subject.Set('map_stim',mwpi.figMap);
     end
 
     % operation
-    opMap = mwpi.Experiment.Subject.Get('map_op');
-    if isempty(opMap)
-        opMap = randomize((1:4)');
-        mwpi.Experiment.Subject.Set('map_op',opMap);
+    mwpi.opMap = mwpi.Experiment.Subject.Get('map_op');
+    if isempty(mwpi.opMap)
+        mwpi.opMap = randomize((1:4)');
+        mwpi.Experiment.Subject.Set('map_op',mwpi.opMap);
     end
 
 % define keys

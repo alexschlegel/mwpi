@@ -19,11 +19,8 @@ opt	= ParseArgs(varargin,...
 		'window', 'main'  ...
 		);
 
-%get the stimulus and operation mappings for the current subject
-	mapStim	= mwpi.Experiment.Subject.Get('map_stim');
-	mapOp	= unless(mwpi.Experiment.Subject.Get('map_op'),[1;3;2;4]);
 %get the stimuli
-	cStim	= arrayfun(@(k) MWPI.Stim.Stimulus(k,'map',mapStim),(1:4)','uni',false);
+	cStim	= arrayfun(@(k) MWPI.Stim.Stimulus(k,'map',mwpi.figMap),(1:4)','uni',false);
 
 %open a texture
 	sTexture	= switch2(mwpi.Experiment.Info.Get('go','session'),1,800,2,1000);
@@ -44,7 +41,7 @@ opt	= ParseArgs(varargin,...
 	strOp	= MWPI.Param('prompt','operation');
 	
 	for k=1:4
-		mwpi.Experiment.Show.Image(mwpi.op{mapOp(k)},[4*(k-1)-6 4],2.5,'window','mapping');
+		mwpi.Experiment.Show.Image(mwpi.op{mwpi.opMap(k)},[4*(k-1)-6 4],2.5,'window','mapping');
 		mwpi.Experiment.Show.Text(['<size:1><style:normal>' strOp(k) '</style></size>'],[4*(k-1)-6 6.25],'window','mapping');
 	end
 

@@ -25,6 +25,10 @@ classdef MWPI < PTB.Object
 		nRun;
 		nBlock;  % per run
         
+        % mappings
+        figMap;
+        opMap;
+        
         % running reward total
         reward;
         % images
@@ -60,6 +64,7 @@ classdef MWPI < PTB.Object
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');
             opt.text_family = MWPI.Param('text','family');
+            opt.text_color = MWPI.Param('text','colNorm');
             
             cOpt = opt2cell(opt);
             
