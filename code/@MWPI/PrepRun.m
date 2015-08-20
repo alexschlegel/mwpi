@@ -1,12 +1,18 @@
 function s = PrepRun(mwpi)
-% mwpi.PrepRun
+% PrepRun
 %
 % Description: Calculate and save parameters for an mwpi run.
 %
 % Syntax: mwpi.PrepRun;
 %
 % Out: the parameter struct (also saved to PTBIFO.mwpi.run.param(end+1) ):
-%		All fields are 1xnBlock arrays.
+%		All fields are 1xnBlock arrays unless otherwise indicated.
+%       All figures and operations are before applying the mapping.
+%
+%       s.promptLoc: location of the actual prompt, clockwise from left (1=left,2=top,etc)
+%       s.promptFig: (4xnBlock) figures on the prompt screen, clockwise from left
+%       s.promptOp:  (4xnBlock) operations on the prompt screen, clockwise from left
+%
 %		s.wFig: working-memory stimulus figure
 %		s.wOp:  working-memory stimulus operation
 %		s.vFig: visual stimulus figure
@@ -23,22 +29,28 @@ function s = PrepRun(mwpi)
 %		s.bProbeMatch: if probe block, true if probe is a match; else 0
 %		s.bMatchW: if matching probe, true if probe matches wm stim; else 0
 %
-% Updated: 2015-08-14
+% Updated: 2015-08-20
 
 % conditions
-[kF, kO] = ndgrid(MWPI.Param('stim','figure'),MWPI.Param('stim','operation'));
+arrFig = MWPI.Param('stim','figure');
+arrOp = MWPI.Param('stim','operation');
+
+[kF, kO] = ndgrid(arrFig, arrOp);
 kCondition = reshape(kF + 10*kO, [],1);
 
-% generate visual and working memory figures
-	% generate blocks without probe
-	nCondRep = MWPI.Param('exp','nCondRep');
-	nNoProbe = MWPI.Param('exp','nNoProbe'); 
+nCondRep = MWPI.Param('exp','nCondRep');
+nProbe = MWPI.Param('exp','nProbe');
+nNoProbe = MWPI.Param('exp','nNoProbe'); 
+nBlock = MWPI.Param('exp','nBlock');
 
+% generate visual and working memory figures
+    
+	% generate blocks without probe
+	
 	wCondition_np = blockdesign(kCondition, nCondRep, 1);
 	vCondition_np = blockdesign(kCondition, nCondRep, 1);
 
 	% generate probe blocks
-	nProbe = MWPI.Param('exp','nProbe');
 	nCondRep = ceil(nProbe / numel(kCondition)); % max repetitions per figure (balanced)
 
 	wCondition_p = blockdesign(kCondition, nCondRep, 1);
@@ -82,8 +94,8 @@ kCondition = reshape(kF + 10*kO, [],1);
 				find(bProbeNoMatch));
 			
 			% choose condition at random from the remaining choices
-			pCondition(bProbeNoMatch) = arrayfun(@(i)	randFrom(kCondition,'exclude',avoidCond),...
-				find(bProbeNoMatch));
+			pCondition(bProbeNoMatch) = arrayfun(@(i)	randFrom(kCondition,'exclude',avoidCond), ...
+                find(bProbeNoMatch));
 
 % decompose conditions
 s.wFig = arrayfun(@(c) decget(c,0), wCondition);
@@ -93,9 +105,22 @@ s.vOp  = arrayfun(@(c) decget(c,1), vCondition);
 s.pFig = arrayfun(@(c) decget(c,0), pCondition);
 s.pOp  = arrayfun(@(c) decget(c,1), pCondition);
 
+% prompt screen parameters
+[~,sTemp] = blockdesign(1, nBlock, 1, struct('loc',1:4));
+s.promptLoc = sTemp.loc;
+
+cFigDistractor = arrayfun(@(wFig) randomize(setdiff(arrFig',wFig)), s.wFig,'uni',false);
+cOpDistractor = arrayfun(@(wOp) randomize(setdiff(arrOp',wOp)), s.wOp,'uni',false);
+
+s.promptFig = cell2mat(cellfun(@(dis,loc,wFig) [dis(1:loc-1); wFig; dis(loc:end)], ...
+    cFigDistractor, num2cell(s.promptLoc), num2cell(s.wFig) ,'uni',false));
+
+s.promptOp = cell2mat(cellfun(@(dis,loc,wOp) [dis(1:loc-1); wOp; dis(loc:end)], ...
+    cOpDistractor, num2cell(s.promptLoc), num2cell(s.wOp), 'uni',false));
+
 % randomize order of blocks
-indShuffle = randomize(1:(nNoProbe + nProbe));
-s = structfun(@(f) f(indShuffle), s, 'uni', false);
+indShuffle = randomize(1:nBlock);
+s = structfun(@(f) f(:,indShuffle), s, 'uni', false);
 
 % save
 	% get existing struct
