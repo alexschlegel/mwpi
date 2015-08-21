@@ -12,6 +12,7 @@ function res = Block(mwpi, sRun, kBlock, sHandle)
 % Updated: 2015-08-18
 
 res.bCorrect = [];
+bFlushed = false;
 
 % set up sequence
 
@@ -55,13 +56,16 @@ end
 		endTimeMS = PTB.Now + timeMS;
 		
 		mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_LOW, endTimeMS);
-		
-		% flush serial port 
-		mwpi.Experiment.Serial.Clear;
 	end
 %--------------------------------------------------------------------%
 	function [bAbort, kResponse, tResponse] = WaitProbe(tNow,~)
 		bAbort = false;
+        
+        % flush serial port once
+        if ~bFlushed
+            mwpi.Experiment.Serial.Clear;
+            bFlushed = true;
+        end
 		
 		kCorrect = cell2mat(mwpi.Experiment.Input.Get( ...
 			conditional(sRun.bProbeMatch(kBlock),'match','noMatch')));

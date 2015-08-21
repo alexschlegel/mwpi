@@ -10,15 +10,30 @@ function Run(mwpi, varargin)
 % Updated: 2015-06-24
 %
 
+% global vars so cleanup will work
+global exp;
+exp = mwpi.Experiment;
+global sResults;
+sResults = [];
+global sRun;
+sRun = struct('res',[]);
+global sHandle;
+sHandle = [];
+global finished;
+finished = false;
+
+% cleanup function
+cleanupObj = onCleanup(@cleanupfn);
+
 % parse arguments
 opt = ParseArgs(varargin, 'mapping', true);
 
 % calculate which run to execute
-sResults = mwpi.Experiment.Info.Get('mwpi','result');
+sResults = exp.Info.Get('mwpi','result');
 kRun = numel(sResults) + 1;
 
 if kRun > mwpi.nRun
-    bContinue = mwpi.Experiment.Prompt.YesNo(['Current run (' num2str(kRun) ...
+    bContinue = exp.Prompt.YesNo(['Current run (' num2str(kRun) ...
         ') exceeds planned number of runs (' num2str(mwpi.nRun) '). Continue?'], ...
         'mode', 'command_window');
     if ~bContinue
@@ -26,20 +41,21 @@ if kRun > mwpi.nRun
     end
 end
 
-mwpi.Experiment.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
+exp.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
 
 % show the mapping
 if opt.mapping
     mwpi.Mapping('wait',false);
-	mwpi.Experiment.Window.Flip('waiting for scanner');
+	exp.Window.Flip('waiting for scanner');
 end
 
 % scanner starts
 tRun = MWPI.Param('time','run');
-mwpi.Experiment.Scanner.StartScan(tRun);
+exp.Scanner.StartScan(tRun);
 
 % get run ready
 sRun = mwpi.PrepRun;
+sRun.res = [];
 
 % perform the run
 
@@ -49,15 +65,15 @@ sRun = mwpi.PrepRun;
     sRun.res = [];
 		
 	% initialize texture handles
-	sHandle.prompt = mwpi.Experiment.Window.OpenTexture('prompt');
-	sHandle.task = mwpi.Experiment.Window.OpenTexture('task');
-    sHandle.probe = mwpi.Experiment.Window.OpenTexture('probe');
-    sHandle.probeYes = mwpi.Experiment.Window.OpenTexture('probeYes');
-    sHandle.probeNo = mwpi.Experiment.Window.OpenTexture('probeNo');
-    sHandle.done = mwpi.Experiment.Window.OpenTexture('done');
+	sHandle.prompt = exp.Window.OpenTexture('prompt');
+	sHandle.task = exp.Window.OpenTexture('task');
+    sHandle.probe = exp.Window.OpenTexture('probe');
+    sHandle.probeYes = exp.Window.OpenTexture('probeYes');
+    sHandle.probeNo = exp.Window.OpenTexture('probeNo');
+    sHandle.done = exp.Window.OpenTexture('done');
     
     % make done screen
-    mwpi.Experiment.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
+    exp.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
         '><color:' MWPI.Param('text','colDone') '>RELAX!</color></size>'], ...
         'window','done');
 
@@ -84,29 +100,19 @@ sRun = mwpi.PrepRun;
 	% go!
     
 	[sRun.tStart, sRun.tEnd, sRun.tSequence, sRun.bAbort] = ...
-		mwpi.Experiment.Sequence.Linear(cF,tSequence, ...
+		exp.Sequence.Linear(cF,tSequence, ...
 		'tstart',1,			...
 		'tbase','absolute' ...
 		);
 	
 	% scanner ends
-	mwpi.Experiment.Scanner.StopScan;
-
-% save results 
-if isempty(sResults)
-	sResults = sRun;
-else
-	sResults(end+1) = sRun;
-end
-mwpi.Experiment.Info.Set('mwpi','result',sResults);
-mwpi.Experiment.Info.AddLog('Results saved.');
-
-% close textures
-cellfun(@(tName) mwpi.Experiment.Window.CloseTexture(tName), fieldnames(sHandle));
+	exp.Scanner.StopScan;
 
 % finish up
-mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
+exp.AddLog(['Run ' num2str(kRun) ' complete']);
 
+finished = true;
+clear cleanupObj;
 %----------------------------------------------------------------------%
     function tNow = DoRest(tNow, ~)
         % Blank the screen, and if there is another block coming up,
@@ -115,23 +121,23 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
         if kBlock == 0
             mwpi.Mapping('wait',false);
         else
-            mwpi.Experiment.Show.Blank;
+            exp.Show.Blank;
         end
         
-        mwpi.Experiment.Window.Flip;
+        exp.Window.Flip;
         
         if kBlock < mwpi.nBlock
             kBlock = kBlock + 1;
             mwpi.PrepTextures(sRun, kBlock);
         end
         
-        mwpi.Experiment.Scheduler.Wait;
+        exp.Scheduler.Wait;
     end
 %---------------------------------------------------------------------%
     function tNow = DoBlock(tNow, ~)
         % Run a block, then save the results.
         
-        mwpi.Experiment.AddLog(['block ' num2str(kBlock) ' start']);
+        exp.AddLog(['block ' num2str(kBlock) ' start']);
         
         resCur = mwpi.Block(sRun, kBlock, sHandle);
         
@@ -153,7 +159,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
             strCorrect  = conditional(bCorrect,'y','n');
             strTally    = [num2str(nCorrect) '/' num2str(kBlock)];
             
-            mwpi.Experiment.AddLog(['feedback (' strCorrect ', ' strTally ')']);
+            exp.AddLog(['feedback (' strCorrect ', ' strTally ')']);
             
             % show feedback texture and updated reward
             if bCorrect
@@ -173,14 +179,55 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
                 StringMoney(dWinning,'sign',true) ')</color>\nCurrent total: ' ...
                 StringMoney(mwpi.reward)];
             
-            mwpi.Experiment.Show.Text(strText,[0,MWPI.Param('text','offset')], ...
+            exp.Show.Text(strText,[0,MWPI.Param('text','offset')], ...
                 'window', winFeedback);
         else
             winFeedback = 'task';                
         end
         
-        mwpi.Experiment.Show.Texture(winFeedback);
-        mwpi.Experiment.Window.Flip;
-	end
-
+        exp.Show.Texture(winFeedback);
+        exp.Window.Flip;
+    end
+%----------------------------------------------------------------------------------%
+    function  tNow = DoDone(tNow,~)
+        exp.Show.Texture(sHandle.done);
+        exp.Window.Flip;
+    end
+%-----------------------------------------------------------------------------------%
 end
+
+    function cleanupfn
+        % cleanup if the run is interrupted / when it ends
+        global sHandle;
+        global exp;
+        global sRun;
+        global sResults;
+        global finished;
+        
+        % close textures
+        if isstruct(sHandle)
+            cellfun(@(tName) exp.Window.CloseTexture(tName), fieldnames(sHandle));
+        end
+        exp.Window.AddLog('Textures closed.');
+
+        
+        % save results 
+        if ~isempty(sRun.res)
+            if ~finished
+                bSave = exp.Prompt.YesNo('WARNING: Run was not finished. Save results?', ...
+                    'mode','command_window');
+            else
+                bSave = true;
+            end
+            
+            if bSave
+                if isempty(sResults)
+                    sResults = sRun;
+                else
+                    sResults(end+1) = sRun;
+                end
+                exp.Info.Set('mwpi','result',sResults);
+                exp.Info.AddLog('Results saved.');
+            end
+        end
+    end

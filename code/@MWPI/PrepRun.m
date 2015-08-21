@@ -122,19 +122,7 @@ s.promptOp = cell2mat(cellfun(@(dis,loc,wOp) [dis(1:loc-1); wOp; dis(loc:end)], 
 indShuffle = randomize(1:nBlock);
 s = structfun(@(f) f(:,indShuffle), s, 'uni', false);
 
-% save
-	% get existing struct
-	paramStruct = mwpi.Experiment.Info.Get('mwpi',{'run','param'});
-	
-	if isempty(paramStruct)
-		paramStruct = s;
-	else
-		paramStruct(end+1) = s;
-	end
-	
-	mwpi.Experiment.Info.Set('mwpi',{'run','param'},paramStruct);
-
 % log
-mwpi.Experiment.AddLog('run prepared; parameters saved');
+mwpi.Experiment.AddLog('run prepared');
 	
 end
