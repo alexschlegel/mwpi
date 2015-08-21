@@ -49,16 +49,16 @@ if sRun.bProbe(kBlock)
    initflip = conditional(sRun.bProbeHFlip(kBlock), 'h', 0);
     [pRot, pFlip] = MWPI.Operate(sRun.pOp(kBlock), 'map', mwpi.opMap, 'initflip', initflip);
     
-    pStim = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
+    [pStim, bStim] = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
         'rotation', pRot, 'flip', pFlip, 'color', MWPI.Param('color','probe'));
     pStimYes = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
         'rotation', pRot, 'flip', pFlip, 'color', MWPI.Param('color','yes'));
     pStimNo = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
         'rotation', pRot, 'flip', pFlip, 'color', MWPI.Param('color','no'));
     
-    shw.Image(pStim, [], probeSz, 'window', 'probe');
-    shw.Image(pStimYes, [], probeSz, 'window', 'probeYes');
-    shw.Image(pStimNo, [], probeSz, 'window', 'probeNo');
+    shw.Image(cat(3,pStim,bStim), [], probeSz, 'window', 'probe');
+    shw.Image(cat(3,pStimYes,bStim), [], probeSz, 'window', 'probeYes');
+    shw.Image(cat(3,pStimNo,bStim), [], probeSz, 'window', 'probeNo');
 end
 
 end

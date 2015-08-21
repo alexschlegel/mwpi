@@ -75,7 +75,7 @@ sRun = mwpi.PrepRun;
       
     tSequence = cumsum([ trMapping
                          repmat([trBlock; trFeedback; trRest], [mwpi.nBlock-1,1])
-                         trTrial
+                         trBlock
                          trFeedback
                          trPost
                          1
@@ -133,7 +133,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
         
         mwpi.Experiment.AddLog(['block ' num2str(kBlock) ' start']);
         
-        resCur = mwpi.Block(kRun, kBlock, sHandle);
+        resCur = mwpi.Block(sRun, kBlock, sHandle);
         
         if isempty(sRun.res)
             sRun.res = resCur;
@@ -146,7 +146,7 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
         % if probe, update correct total, reward, show feedback screen
         
         if sRun.bProbe(kBlock)            
-            bCorrect = sRun.res(end).correct;
+            bCorrect = sRun.res(end).bCorrect;
             
             % add a log message
             nCorrect    = nCorrect + bCorrect;
@@ -181,232 +181,6 @@ mwpi.Experiment.AddLog(['Run ' num2str(kRun) ' complete']);
         
         mwpi.Experiment.Show.Texture(winFeedback);
         mwpi.Experiment.Window.Flip;
-    end
-
-
-% %--------------------------------------------------------------------%
-%     function cX = SetupStimuli
-%         
-%         % Set up the cell of stimuli for the run sequence.
-%         
-%         cRSVP = arrayfun(@(kTrial) ...
-%             {arr_hTask(kTrial)              % response screen
-%              arr_hTask(kTrial)              % buffer to allow correct feedback
-%              {@ShowTaskFeedback, kTrial}    % feedback screen
-%             }, ...
-%             (1:mwpi.RSVPLength)','uni',false);
-%         
-%         cRSVP = vertcat(cRSVP{:});
-%         
-%         cRest = {{'Blank'}   % rest / prerun
-%             {'Blank'}}; % preblock
-%         
-%         cBlock = [hPrompt
-%                   {{'Blank'}}
-%                   cRSVP
-%                   hRecall
-%                   hRecall % buffer to allow correct feedback
-%                   {@ShowRecallFeedback}
-%                   ];
-%         
-%         cPost = {{'Blank'}}; % postrun
-%         
-%         cX = [repmat([cRest
-%                       cBlock
-%                       ], mwpi.nBlock,1)
-%               cPost
-%              ];
-%     end
-% %--------------------------------------------------%
-% 	function ShowTaskFeedback(kTrial, varargin)
-% 		% Show the appropriate task feedback screen
-% 		
-% 		myOpt = ParseArgs(varargin, 'window', []);
-% 		
-% 		if isempty(bLastCorrect)
-% 			arr_hFeedback = arr_hTask;
-% 		elseif bLastCorrect
-% 			arr_hFeedback = arr_hTaskYes;
-% 		else
-% 			arr_hFeedback = arr_hTaskNo;
-% 		end
-% 		
-% 		bLastCorrect = [];
-% 		
-% 		mwpi.Experiment.Show.Texture(arr_hFeedback(kTrial), 'window',myOpt.window);
-%         
-%         bClearSerialWaitTask = true; % for next task
-% 	end
-% %----------------------------------------------%
-% 	function ShowRecallFeedback(varargin)
-% 		% show the appropriate recall feedback screen
-% 		
-% 		myOpt = ParseArgs(varargin, 'window', []);
-% 		
-% 		if isempty(bLastCorrect)
-% 			hFeedback = hRecall;
-% 		elseif bLastCorrect
-% 			hFeedback = hRecallYes;
-% 		else
-% 			hFeedback = hRecallNo;
-% 		end
-% 		
-% 		bLastCorrect = [];
-% 		
-% 		mwpi.Experiment.Show.Texture(hFeedback, 'window', myOpt.window);
-%         
-%         bClearSerialWaitTask = true; % for next task
-%     end
-% %-----------------------------------------------------------------------%
-%     function tShow = SetupTiming
-%         
-%         % set up the timing for the run sequence
-%         
-%         tBlock = [MWPI.Param('time','preblock')
-%                   MWPI.Param('time','prompt')
-%                   MWPI.Param('time','blank')
-%                   repmat(MWPI.Param('time','task'),mwpi.RSVPLength,1)
-%                   MWPI.Param('time','recall')];
-% 	
-%         % tShowAbs: the absolute transition times (does not include transitions
-%         % to feedback screens)
-%         tShowAbs = cumsum([MWPI.Param('time','prerun')
-%                            repmat([tBlock
-%                                    MWPI.Param('time','rest')
-%                                    ],mwpi.nBlock-1,1)
-%                            tBlock
-%                            MWPI.Param('time','postrun')
-%                           ]);
-% 	
-%         % during which elements of tShowTemp are we expecting a response?
-%         bResponseStimuli = [repmat([false % rest / prerun
-%                                     false % preblock
-%                                     false % prompt
-%                                     false % blank
-%                                     true(mwpi.RSVPLength + 1,1) % trials and recall                                
-%                                     ],mwpi.nBlock,1)
-%                             false % postrun
-%                             ];
-% 	
-%         tAfterFeedback = tShowAbs(bResponseStimuli);
-% 	
-%         % control transition to buffer and feedback stimuli
-%         tShow = num2cell(tShowAbs);
-%         tShow(bResponseStimuli) = arrayfun(@(tNext) ...
-%             {@(tNow) MoveToFeedback(tNow, tNext)% task
-%              @(tNow) deal(false, true)          % buffer (move immediately)
-%              tNext},...                           feedback
-% 		tAfterFeedback, 'uni',false);
-% 	
-%         tShow = cellnestflatten(tShow);
-%     end
-% %-------------------------------------------%
-% 	function [bAbort, bShow] = MoveToFeedback(tNow, tNext)
-% 		% return whether to show the feedback screen
-% 		bAbort = false;
-% 		% move on if there has been a response or it's time for the next
-% 		% stimulus
-% 		if tNow >= tNext || bResponse
-% 			bResponse = false;
-% 			bShow = true;
-% 		else
-% 			bShow = false;
-% 		end
-%     end
-% %--------------------------------------------------------------------%
-%     function fwait = SetupWaitFuncs
-%         fwait = [arrayfun(@(kBlock) ...
-%                     [{{@(tNow,tNext) WaitRest(kBlock,tNow,tNext)}}   % prerun / rest
-%                      {{@WaitDefault}}                                % preblock
-%                      {{@WaitDefault}}                                % prompt
-%                      {{@WaitDefault}}                                % blank
-% 
-%                      % RSVP stream
-%                      arrayfun(@(kTrial) ...
-%                          {@(tNow,tNext) WaitTask(mwpi.match(kRun,kBlock,kTrial),tNow,tNext)
-%                           false          % buffer
-%                           @WaitDefault   % feedback
-%                          },...
-%                         (1:mwpi.RSVPLength)','uni',false)
-% 
-%                      % recall    
-%                      {{@(tNow,tNext) WaitTask(mwpi.rMatch(kRun,kBlock),tNow,tNext)}}
-%                      false            % buffer
-%                      {{@WaitDefault}}   % feedback
-% 					], (1:mwpi.nBlock)','uni',false);
-%              {{@WaitDefault}} % postrun
-%              ];
-%          
-%         fwait = cellnestflatten(fwait);
-%     end
-% %----------------------------------%
-%     function [bAbort, bCorrect, tResponse] = WaitDefault(~, tNext)
-%         % wait and perform tasks in the background
-%         
-%         bAbort = false;
-%         bCorrect = [];
-%         tResponse = [];
-%         
-%         % clear shared vars
-%         bResponse = false;
-%         bLastCorrect = [];
-%         bTexturesPrepared = false;
-%         
-%         tNextms = mwpi.Experiment.Scanner.TR2ms(tNext);
-%         
-%         WaitSecs(0.001);
-%         mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_NORMAL, tNextms);
-%     end
-% %--------------------------------------%
-% 	function [bAbort, bCorrect, tResponse] = WaitRest(kBlock, ~, tNext)
-%         % prepare textures while while resting between blocks.
-% 				
-% 		if ~bTexturesPrepared
-%             bTexturesPrepared = true;
-% 		end
-% 		
-% 		% wait
-%         bAbort = false;
-%         bCorrect = [];
-%         tResponse = [];
-%         
-%         tNextms = mwpi.Experiment.Scanner.TR2ms(tNext);
-%         
-%         WaitSecs(0.001);
-%         mwpi.Experiment.Scheduler.Wait(PTB.Scheduler.PRIORITY_IDLE, tNextms);
-% 	end
-% %---------------------------------------%
-% 	function [bAbort, bCorrect, tResponse] = WaitTask(bMatch, tNow, ~)
-% 		% Listen for responses during the task stage
-% 		
-% 		bAbort = false;
-% 		kCorrect = cell2mat(mwpi.Experiment.Input.Get(conditional(bMatch,'match','noMatch')));
-% 		
-% 		% if a response has been logged, don't check for another.
-%         if bResponse
-% 			bCorrect = [];
-% 			tResponse = [];
-% 			return
-%         end
-%         
-%         bLastCorrect = [];        
-% 		
-% 		% check for a response
-%         if bClearSerialWaitTask
-%             mwpi.Experiment.Serial.Clear;
-%             bClearSerialWaitTask = false;
-%         end
-%         
-% 		[bResp,~,~,kButton] = mwpi.Experiment.Input.DownOnce('response');
-% 		if ~bResp
-% 			tResponse = [];
-% 			bCorrect = [];
-% 		else		
-% 			tResponse = tNow;
-% 			bCorrect = all(ismember(kButton, kCorrect));
-% 		end
-% 		bLastCorrect = bCorrect;
-% 		bResponse = bResp;
-%     end
+	end
 
 end
