@@ -28,6 +28,8 @@ function s = PrepRun(mwpi)
 %		s.bProbe: true if probe block
 %		s.bProbeMatch: if probe block, true if probe is a match; else 0
 %		s.bMatchW: if matching probe, true if probe matches wm stim; else 0
+%		s.tProbe: time, in TRs, of onset of the probe, from start of trial
+%				  period (if probe block)
 %
 % Updated: 2015-08-20
 
@@ -38,10 +40,17 @@ arrOp = MWPI.Param('stim','operation');
 [kF, kO] = ndgrid(arrFig, arrOp);
 kCondition = reshape(kF + 10*kO, [],1);
 
-nCondRep = MWPI.Param('exp','nCondRep');
-nProbe = MWPI.Param('exp','nProbe');
-nNoProbe = MWPI.Param('exp','nNoProbe'); 
-nBlock = MWPI.Param('exp','nBlock');
+% are we doing practice?
+if strcmp(mwpi.Experiment.Info.Get('experiment','context'), 'psychophysics')
+	strDomain = 'practice';
+else
+	strDomain = 'exp';
+end
+
+nCondRep = MWPI.Param(strDomain,'nCondRep');
+nProbe = MWPI.Param(strDomain,'nProbe');
+nNoProbe = MWPI.Param(strDomain,'nNoProbe'); 
+nBlock = MWPI.Param(strDomain,'nBlock');
 
 % generate visual and working memory figures
     
@@ -65,8 +74,8 @@ nBlock = MWPI.Param('exp','nBlock');
 	vCondition = [vCondition_np vCondition_p];
 
 % generate probe figures
-	fracCorr = MWPI.Param('exp','fracProbeCorrect');
-	fracMatchW = MWPI.Param('exp','fracMatchW'); % fraction of correct probes that match the working memory stimulus
+	fracCorr = MWPI.Param(strDomain,'fracProbeCorrect');
+	fracMatchW = MWPI.Param(strDomain,'fracMatchW'); % fraction of correct probes that match the working memory stimulus
 
 	% randomly assign probes to be correct/incorrect + match visual/wm stim
 	s.bProbe = [false([1,nNoProbe]), true([1,nProbe])];
@@ -104,6 +113,11 @@ s.vFig = arrayfun(@(c) decget(c,0), vCondition);
 s.vOp  = arrayfun(@(c) decget(c,1), vCondition);
 s.pFig = arrayfun(@(c) decget(c,0), pCondition);
 s.pOp  = arrayfun(@(c) decget(c,1), pCondition);
+
+% probe onset times
+tMaxOnset = MWPI.Param('time','task') - MWPI.Param('time','probe');
+s.tProbe		   = zeros([1,nBlock]); 
+s.tProbe(s.bProbe) = randBetween(0, tMaxOnset, [1,nProbe]);
 
 % prompt screen parameters
 [~,sTemp] = blockdesign(1, nBlock, 1, struct('loc',1:4));

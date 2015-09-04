@@ -17,7 +17,7 @@ function PrepTextures(mwpi, sRun, kBlock)
 
 % verify block
 
-if kBlock > mwpi.nBlock
+if kBlock > numel(sRun.bProbe)
 	error('Block out of range');
 end
 

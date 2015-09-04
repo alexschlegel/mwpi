@@ -76,10 +76,16 @@ sRun.res = [];
     exp.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
         '><color:' MWPI.Param('text','colDone') '>RELAX!</color></size>'], ...
         'window','done');
+	
+	cFProbe   = {@DoBlock; @DoFeedback; @DoRest};
+	cFNoProbe = {@DoBlock; @DoRest};
+	
+	cFTrials  = conditional(reshape(sRun.bProbe,[],1),cFProbe,cFNoProbe);
+	cFTrials  = cellnestflatten(cFTrials);
 
     % set up sequence %
-    cF = [  repmat({@DoRest; @DoBlock; @DoFeedback}, [mwpi.nBlock, 1])
-            {@DoRest}
+    cF = [  {@DoRest}
+			cFTrials          
             {@DoDone}
           ];
       
@@ -87,13 +93,15 @@ sRun.res = [];
     trBlock = MWPI.Param('time', 'block');
     trFeedback = MWPI.Param('time','feedback');
     trRest = MWPI.Param('time','rest');
-    trPost = MWPI.Param('time','postrun');
+	
+	tSeqProbe   = [trBlock; trFeedback; trRest];
+	tSeqNoProbe = [trBlock; trRest];
+	
+	tSeqTrials = conditional(reshape(sRun.bProbe,[],1),tSeqProbe,tSeqNoProbe);
+	tSeqTrials = cell2mat(tSeqTrials);
       
     tSequence = cumsum([ trMapping
-                         repmat([trBlock; trFeedback; trRest], [mwpi.nBlock-1,1])
-                         trBlock
-                         trFeedback
-                         trPost
+                         tSeqTrials
                          1
                          ]) + 1;
 								
@@ -149,42 +157,38 @@ clear cleanupObj;
     end
 %--------------------------------------------------------------------%
     function tNow = DoFeedback(tNow, ~)
-        % if probe, update correct total, reward, show feedback screen
+        % update correct total, reward, show feedback screen
         
-        if sRun.bProbe(kBlock)            
-            bCorrect = sRun.res(end).bCorrect;
-            
-            % add a log message
-            nCorrect    = nCorrect + bCorrect;
-            strCorrect  = conditional(bCorrect,'y','n');
-            strTally    = [num2str(nCorrect) '/' num2str(kBlock)];
-            
-            exp.AddLog(['feedback (' strCorrect ', ' strTally ')']);
-            
-            % show feedback texture and updated reward
-            if bCorrect
-                winFeedback = 'probeYes';
-                strFeedback = 'Yes!';
-                strColor = MWPI.Param('text','colYes');
-                dWinning = MWPI.Param('reward','rewardPerBlock');
-            else
-                winFeedback = 'probeNo';
-                strFeedback = 'No!';
-                strColor = MWPI.Param('text','colNo');
-                dWinning = -MWPI.Param('reward','penaltyPerBlock');
-            end
-            mwpi.reward = max(mwpi.reward + dWinning, MWPI.Param('reward','base'));
-            
-            strText = ['<color:' strColor '>' strFeedback ' (' ...
-                StringMoney(dWinning,'sign',true) ')</color>\nCurrent total: ' ...
-                StringMoney(mwpi.reward)];
-            
-            exp.Show.Text(strText,[0,MWPI.Param('text','offset')], ...
-                'window', winFeedback);
-        else
-            winFeedback = 'task';                
-        end
-        
+		bCorrect = sRun.res(end).bCorrect;
+
+		% add a log message
+		nCorrect    = nCorrect + bCorrect;
+		strCorrect  = conditional(bCorrect,'y','n');
+		strTally    = [num2str(nCorrect) '/' num2str(kBlock)];
+
+		exp.AddLog(['feedback (' strCorrect ', ' strTally ')']);
+
+		% show feedback texture and updated reward
+		if bCorrect
+			winFeedback = 'probeYes';
+			strFeedback = 'Yes!';
+			strColor = MWPI.Param('text','colYes');
+			dWinning = MWPI.Param('reward','rewardPerBlock');
+		else
+			winFeedback = 'probeNo';
+			strFeedback = 'No!';
+			strColor = MWPI.Param('text','colNo');
+			dWinning = -MWPI.Param('reward','penaltyPerBlock');
+		end
+		mwpi.reward = max(mwpi.reward + dWinning, MWPI.Param('reward','base'));
+
+		strText = ['<color:' strColor '>' strFeedback ' (' ...
+			StringMoney(dWinning,'sign',true) ')</color>\nCurrent total: ' ...
+			StringMoney(mwpi.reward)];
+
+		exp.Show.Text(strText,[0,MWPI.Param('text','offset')], ...
+			'window', winFeedback);
+      
         exp.Show.Texture(winFeedback);
         exp.Window.Flip;
     end

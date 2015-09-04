@@ -14,24 +14,54 @@ function res = Block(mwpi, sRun, kBlock, sHandle)
 res.bCorrect = [];
 bFlushed = false;
 
+bProbe = sRun.bProbe(kBlock);
+
 % set up sequence
+if bProbe
+	cX = {	sHandle.prompt
+			{'Blank'}
+			sHandle.task
+			sHandle.probe
+			sHandle.task
+		};
+else
+	cX = {	sHandle.prompt
+			{'Blank'}
+			sHandle.task
+		};
+end
 
-cX = {	sHandle.prompt
-		{'Blank'}
-		sHandle.task
-		sHandle.probe
-	};
+if bProbe
+	tProbeStart = sRun.tProbe(kBlock);
+	tAfterProbe = MWPI.Param('time','task') - tProbeStart - MWPI.Param('time','probe');
+	tShow = cumsum([	MWPI.Param('time','prompt')
+						MWPI.Param('time','blank')
+						tProbeStart
+						MWPI.Param('time','probe')
+						tAfterProbe
+					]);
+else
+	tShow = cumsum([	MWPI.Param('time','prompt')
+						MWPI.Param('time','blank')
+						MWPI.Param('time','task')
+					]);
+end
 
-tShow = cumsum([	MWPI.Param('time','prompt')
-					MWPI.Param('time','blank')
-					MWPI.Param('time','task')
-					MWPI.Param('time','probe')
-				]);
+if strcmp(mwpi.Experiment.Info.Get('experiment','context'), 'psychophysics')
+	% convert trs to milliseconds
+	trSecs = MWPI.Param('trTime');
+	tShow = tShow * trSecs * 1000;
+end
 	
-fwait = repmat({@WaitDefault},4,1);
-
-if sRun.bProbe(kBlock)
-	fwait{4} = @WaitProbe;
+if bProbe
+	fwait = {@WaitDefault
+			 @WaitDefault
+			 @WaitDefault
+			 @WaitProbe
+			 @WaitDefault
+			 };
+else
+	fwait = repmat({@WaitDefault},3,1);
 end
 
 [res.tStart, res.tEnd, res.tShow, res.bAbort, res.kResponse, res.tResponse] = ...
@@ -42,7 +72,7 @@ end
 	);
 
 % if it's a probe and there's no response, call it incorrect
-if sRun.bProbe(kBlock) && isempty(res.bCorrect)
+if bProbe && isempty(res.bCorrect)
 	res.bCorrect = false;
 end
 
