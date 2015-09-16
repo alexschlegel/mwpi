@@ -25,6 +25,9 @@ sHandle.probe = exp.Window.OpenTexture('probe');
 sHandle.probeYes = exp.Window.OpenTexture('probeYes');
 sHandle.probeNo = exp.Window.OpenTexture('probeNo');
 
+% % turn on keyboard listening
+% ListenChar(2);
+
 for k = 1:numel(chunkLen)
 	
 	for m = 1:chunkFreq(k)
@@ -53,6 +56,10 @@ end
 % save results
 exp.Info.Set('mwpi','practiceRes',res);
 exp.AddLog('results saved');
+
+% % enable keyboard
+% ListenChar(1);
+
 %---------------------------------------------------------------------%
 
  function DoFeedback(bCorrect, tStart, tWait)
