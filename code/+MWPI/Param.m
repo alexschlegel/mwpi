@@ -60,13 +60,12 @@ function P = InitializeP
     
 	P.exp = struct(...
 		'nRun',				10,	...
-		'fracProbe',		.2,	... fraction of blocks with probe
+		'nProbe',   		4,  ... blocks with probe (figures are balanced if multiple of 4)
 		'fracProbeCorrect',	.5,	...	fraction of probes that are a match
 		'fracMatchW',		.5,	... of the correct probes, fraction that match the working memory image
-		'nCondRep',			1	...
+		'nCondRep',			2	... number of times to repeat the 4 figures (in nonprobe trials)
 		);
-	P.exp.nNoProbe = numel(P.stim.figure) * numel(P.stim.operation) * P.exp.nCondRep;
-    P.exp.nProbe = ceil(P.exp.fracProbe * P.exp.nNoProbe / (1 - P.exp.fracProbe));
+	P.exp.nNoProbe = numel(P.stim.figure) * P.exp.nCondRep;
     P.exp.nProbeTotal = P.exp.nProbe * P.exp.nRun; % total # of probes in experiment
     P.exp.nBlock = P.exp.nProbe + P.exp.nNoProbe;
 	

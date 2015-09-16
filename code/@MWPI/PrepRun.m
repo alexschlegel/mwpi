@@ -27,7 +27,7 @@ function s = PrepRun(mwpi)
 %										   start orient. + pOp + hflip if 1
 %		s.bProbe: true if probe block
 %		s.bProbeMatch: if probe block, true if probe is a match; else 0
-%		s.bMatchW: if matching probe, true if probe matches wm stim; else 0
+%		s.bMatchW: if matching probe, true if probe matches wm stim; else 0'
 %		s.tProbe: time, in TRs, of onset of the probe, from start of trial
 %				  period (if probe block)
 %
@@ -47,7 +47,7 @@ else
 	strDomain = 'exp';
 end
 
-nCondRep = MWPI.Param(strDomain,'nCondRep');
+nCondRep_np = MWPI.Param(strDomain,'nCondRep');
 nProbe = MWPI.Param(strDomain,'nProbe');
 nNoProbe = MWPI.Param(strDomain,'nNoProbe'); 
 nBlock = MWPI.Param(strDomain,'nBlock');
@@ -56,22 +56,30 @@ nBlock = MWPI.Param(strDomain,'nBlock');
     
 	% generate blocks without probe
 	
-	wCondition_np = blockdesign(kCondition, nCondRep, 1);
-	vCondition_np = blockdesign(kCondition, nCondRep, 1);
+    wFig_np = blockdesign(arrFig, nCondRep_np, 1);
+    vFig_np = blockdesign(arrFig, nCondRep_np, 1);
 
 	% generate probe blocks
-	nCondRep = ceil(nProbe / numel(kCondition)); % max repetitions per figure (balanced)
+	nCondRep_p = ceil(nProbe / numel(arrFig)); % max repetitions per figure (balanced)
 
-	wCondition_p = blockdesign(kCondition, nCondRep, 1);
-	vCondition_p = blockdesign(kCondition, nCondRep, 1);
+    wFig_p = blockdesign(arrFig, nCondRep_p, 1);
+    vFig_p = blockdesign(arrFig, nCondRep_p, 1);
 	
 	% trim to number of probe blocks
-	wCondition_p = wCondition_p(1:nProbe);
-	vCondition_p = vCondition_p(1:nProbe);
+	wFig_p = wFig_p(1:nProbe);
+	vFig_p = vFig_p(1:nProbe);
 	
 	% combine
-	wCondition = [wCondition_np wCondition_p];
-	vCondition = [vCondition_np vCondition_p];
+	s.wFig = [wFig_np wFig_p];
+	s.vFig = [vFig_np vFig_p];
+    
+    % choose operations (randomly)
+    s.wOp = randFrom(arrOp, [1,nBlock], 'unique', false);
+    s.vOp = randFrom(arrOp, [1,nBlock], 'unique', false);
+    
+    % arrrays of composite conditions
+    wCondition = s.wFig + 10*s.wOp;
+    vCondition = s.vFig + 10*s.vOp;
 
 % generate probe figures
 	fracCorr = MWPI.Param(strDomain,'fracProbeCorrect');
@@ -79,8 +87,11 @@ nBlock = MWPI.Param(strDomain,'nBlock');
 
 	% randomly assign probes to be correct/incorrect + match visual/wm stim
 	s.bProbe = [false([1,nNoProbe]), true([1,nProbe])];
+    
 	s.bProbeMatch = logical([false([1,nNoProbe]) CoinFlip(nProbe, fracCorr)']);
-	s.bMatchW(s.bProbeMatch) = logical(CoinFlip(sum(s.bProbeMatch),fracMatchW));
+    nProbeMatch = sum(s.bProbeMatch);
+    
+	s.bMatchW(s.bProbeMatch) = logical(CoinFlip(nProbeMatch,fracMatchW));
 	s.bMatchW(~s.bProbeMatch) = false;
 
 	% probe figures and operations
@@ -107,10 +118,6 @@ nBlock = MWPI.Param(strDomain,'nBlock');
                 find(bProbeNoMatch));
 
 % decompose conditions
-s.wFig = arrayfun(@(c) decget(c,0), wCondition);
-s.wOp  = arrayfun(@(c) decget(c,1), wCondition);
-s.vFig = arrayfun(@(c) decget(c,0), vCondition);
-s.vOp  = arrayfun(@(c) decget(c,1), vCondition);
 s.pFig = arrayfun(@(c) decget(c,0), pCondition);
 s.pOp  = arrayfun(@(c) decget(c,1), pCondition);
 

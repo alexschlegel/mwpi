@@ -55,6 +55,7 @@ end
 
 % save results
 exp.Info.Set('mwpi','practiceRes',res);
+exp.Info.Set('mwpi','sRun',sRun);
 exp.AddLog('results saved');
 
 % % enable keyboard
