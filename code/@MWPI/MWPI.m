@@ -62,7 +62,8 @@ classdef MWPI < PTB.Object
             opt.name = 'mwpi';
             opt.context = conditional(opt.practice,'psychophysics','fmri');
             opt.tr = MWPI.Param('time','tr');
-            opt.input_scheme = 'lr';			
+            opt.input_scheme = 'lr';
+            opt.disable_key = false;
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');
             opt.text_family = MWPI.Param('text','family');
@@ -73,6 +74,13 @@ classdef MWPI < PTB.Object
             % create experiment
             mwpi.Experiment = PTB.Experiment(cOpt{:});
             mwpi.Start;
+            
+            % hack to get the joystick to work (the triggers don't seem to
+            % work)
+            if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
+                mwpi.Experiment.Input.Set('left','lupper');
+                mwpi.Experiment.Input.Set('right','rupper');
+            end
             
             % initialize experiment
             mwpi.Init;           

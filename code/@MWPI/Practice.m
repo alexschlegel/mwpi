@@ -53,6 +53,10 @@ for k = 1:numel(chunkLen)
 	end
 end
 
+% finish
+exp.Show.Text('Practice Finished!\nPlease wait for experimenter.');
+exp.Window.Flip;
+
 % save results
 exp.Info.Set('mwpi','practiceRes',res);
 exp.Info.Set('mwpi','sRun',sRun);
