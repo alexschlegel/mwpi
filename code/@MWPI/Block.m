@@ -19,14 +19,14 @@ bProbe = sRun.bProbe(kBlock);
 % set up sequence
 if bProbe
 	cX = {	sHandle.prompt
-			{'Blank'}
+% no more blank			{'Blank'} 
 			sHandle.task
 			sHandle.probe
 			sHandle.task
 		};
 else
 	cX = {	sHandle.prompt
-			{'Blank'}
+%			{'Blank'}
 			sHandle.task
 		};
 end
@@ -35,14 +35,14 @@ if bProbe
 	tProbeStart = sRun.tProbe(kBlock);
 	tAfterProbe = MWPI.Param('time','task') - tProbeStart - MWPI.Param('time','probe');
 	tShow = cumsum([	MWPI.Param('time','prompt')
-						MWPI.Param('time','blank')
+%						MWPI.Param('time','blank')
 						tProbeStart
 						MWPI.Param('time','probe')
 						tAfterProbe
 					]);
 else
 	tShow = cumsum([	MWPI.Param('time','prompt')
-						MWPI.Param('time','blank')
+%						MWPI.Param('time','blank')
 						MWPI.Param('time','task')
 					]);
 end
@@ -55,13 +55,13 @@ end
 	
 if bProbe
 	fwait = {@WaitDefault
-			 @WaitDefault
+%			 @WaitDefault
 			 @WaitDefault
 			 @WaitProbe
 			 @WaitDefault
 			 };
 else
-	fwait = repmat({@WaitDefault},3,1);
+	fwait = repmat({@WaitDefault},2,1);
 end
 
 [res.tStart, res.tEnd, res.tShow, res.bAbort, res.kResponse, res.tResponse] = ...

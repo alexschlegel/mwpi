@@ -9,14 +9,17 @@ function ShowPrompt(mwpi,sRun,kBlock,varargin)
 %	sRun	- the run parameter struct
 % 	kBlock	- the block number
 %	<options>:
-%		window:	('main') the name of the window on which to show the prompt
+%		window:	     ('main') the name of the window on which to show the prompt
+%		transparent: (false)  whether the background is transparent
+%							  (i.e. whether to not blank the screen first)
 % 
 % Updated: 2015-08-20 for mwpi
 % Copyright 2013 Alex Schlegel (schlegel@gmail.com).  This work is licensed
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
 opt	= ParseArgs(varargin,...
-		'window'	, 'main'	  ...
+		'window'		, 'main',   ...
+		'transparent'	, false		...
 		);
 
 %get the shape and operation order	
@@ -26,7 +29,9 @@ opt	= ParseArgs(varargin,...
 	op = sRun.promptOp(:,kBlock);
     
 %blank the screen
-	mwpi.Experiment.Show.Blank('fixation',false,'window',opt.window);
+	if ~opt.transparent
+		mwpi.Experiment.Show.Blank('fixation',false,'window',opt.window);
+	end
 %show the prompts
 	mStimulus	= MWPI.Param('prompt','stimulus');
 	mOperation	= MWPI.Param('prompt','operation');
@@ -39,10 +44,13 @@ opt	= ParseArgs(varargin,...
 	xPrompt	= dPrompt*[-1 0 1 0];
 	yPrompt	= dPrompt*[0 -1 0 1] + 0.25;
 	
-	strSize	= num2str(MWPI.Param('text','sizePrompt'));
+	strSize	= num2str(MWPI.Param('prompt','text'));
+	colPmt  = MWPI.Param('prompt','color');
 	
 	for kP=1:4
-		mwpi.Experiment.Show.Text(['<size:' strSize '>' chrPrompt(kP) chrOperation(kP) '</size>'],[xPrompt(kP) yPrompt(kP)],'window',opt.window);
+		mwpi.Experiment.Show.Text( ...
+		['<size:' strSize '><color:' colPmt '>' chrPrompt(kP) chrOperation(kP) '</color></size>'], ...
+		[xPrompt(kP) yPrompt(kP)],'window',opt.window);
 	end
 %show the arrow
 	im	= imrotate(mwpi.arrow,(1-locInput)*90);

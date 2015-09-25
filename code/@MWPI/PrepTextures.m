@@ -25,10 +25,6 @@ shw = mwpi.Experiment.Show;
 stimSz = MWPI.Param('size','stim');
 probeSz = MWPI.Param('size','probe');
 
-% prompt screen
-shw.Blank('window','prompt');
-mwpi.ShowPrompt(sRun, kBlock, 'window','prompt');
-
 % task screen
 shw.Blank('window','task');
 
@@ -37,6 +33,11 @@ vStim = MWPI.Stim.Stimulus(sRun.vFig(kBlock), 'map', mwpi.figMap, ...
     'rotation', vRot, 'flip', vFlip);
 
 shw.Image(vStim, [], stimSz, 'window', 'task');
+
+% prompt screen
+% start with task screen
+shw.Texture('task','window','prompt');
+mwpi.ShowPrompt(sRun, kBlock, 'window','prompt','transparent',true);
 
 % copy task screen to probe windows
 shw.Texture('task', 'window', 'probe');
