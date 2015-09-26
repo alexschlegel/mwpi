@@ -23,8 +23,7 @@ opt	= ParseArgs(varargin,...
 	cStim	= arrayfun(@(k) MWPI.Stim.Stimulus(k,'map',mwpi.figMap),(1:4)','uni',false);
 
 %open a texture
-%	sTexture	= switch2(mwpi.Experiment.Info.Get('go','session'),1,800,2,1000);
-	sTexture = 1000;
+	sTexture = MWPI.Param('size','mappingpx');
 	mwpi.Experiment.Window.OpenTexture('mapping',[sTexture sTexture]);
 %show the stimuli
 	mwpi.Experiment.Show.Text('<size:1><color:marigold>shapes</color></size>',[0 -3.5],'window','mapping');
