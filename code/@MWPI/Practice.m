@@ -90,7 +90,7 @@ exp.AddLog('results saved');
 
 		strText = ['<color:' strColor '>' strFeedback '</color>'];
 
-		exp.Show.Text(strText,[0,MWPI.Param('text','offset')], ...
+		exp.Show.Text(strText,[0,MWPI.Param('text','fbOffset')], ...
 			'window', winFeedback);
       
         exp.Show.Texture(winFeedback);

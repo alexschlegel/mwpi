@@ -3,8 +3,8 @@ function PrepTextures(mwpi, sRun, kBlock)
 %	They should have already been opened by the calling function.
 %	Textures:	'prompt'				== prompt screen
 %				'task'          		== screen with visual stimulus (before probe)
-%               'probe'                 == task screen plus probe figure (only if this is
-%                                          a probe block, otherwise same as task)
+%               'probe'                 == probe figure (only if this is
+%                                          a probe block, otherwise blank)
 %               'probeYes'              == same as probe, but with a green probe
 %               'probeNo'               == same as probe, but with a red probe
 %
@@ -40,9 +40,9 @@ shw.Texture('task','window','prompt');
 mwpi.ShowPrompt(sRun, kBlock, 'window','prompt','transparent',true);
 
 % copy task screen to probe windows
-shw.Texture('task', 'window', 'probe');
-shw.Texture('task', 'window', 'probeYes');
-shw.Texture('task', 'window', 'probeNo');
+shw.Blank('window','probe');
+shw.Blank('window','probeYes');
+shw.Blank('window','probeNo');
 
 if sRun.bProbe(kBlock)
     

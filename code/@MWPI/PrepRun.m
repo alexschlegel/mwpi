@@ -30,6 +30,8 @@ function s = PrepRun(mwpi)
 %		s.bMatchW: if matching probe, true if probe matches wm stim; else 0'
 %		s.tProbe: time, in TRs, of onset of the probe, from start of trial
 %				  period (if probe block)
+%		s.kProbe: for probe blocks, indicates which probe block we're on
+%				  (e.g. s.kProbe = 3 for the third probe block)
 %
 % Updated: 2015-08-20
 
@@ -123,8 +125,12 @@ s.pOp  = arrayfun(@(c) decget(c,1), pCondition);
 
 % probe onset times
 tMaxOnset = MWPI.Param('time','task') - MWPI.Param('time','probe');
+tMinOnset = MWPI.Param('time','probeDelay');
 s.tProbe		   = zeros([1,nBlock]); 
-s.tProbe(s.bProbe) = randBetween(0, tMaxOnset, [1,nProbe]);
+s.tProbe(s.bProbe) = randBetween(tMinOnset, tMaxOnset, [1,nProbe]);
+
+% probe order
+s.kProbe(s.bProbe) = 1:nProbe;
 
 % prompt screen parameters
 [~,sTemp] = blockdesign(1, nBlock, 1, struct('loc',1:4));
