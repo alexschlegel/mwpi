@@ -1,9 +1,16 @@
-function s = PrepRun(mwpi)
+function s = CalcParams(varargin)
 % PrepRun
 %
-% Description: Calculate and save parameters for an mwpi run.
+% Description: Calculate and save parameters for all runs of an mwpi
+% experiment (either normal or practice).
 %
-% Syntax: mwpi.PrepRun;
+% Syntax: MWPI.CalcParams([options]);
+%
+% In:
+%   <options>:
+%       practice: [false] if true, this is a practice run.
+%
+% ------------------- EDIT LINE ---------------------------------------
 %
 % Out: the parameter struct (also saved to PTBIFO.mwpi.run.param(end+1) ):
 %		All fields are 1xnBlock arrays unless otherwise indicated.

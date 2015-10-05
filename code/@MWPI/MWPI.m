@@ -25,16 +25,11 @@ classdef MWPI < PTB.Object
         Experiment;
 		nRun;
 		nBlock;  % per run
-        
-        % mappings
-        figMap;
-        opMap;
-        
+        sParam;
+        bPractice;
+                
         % running reward total
         reward;
-        % images
-        arrow = [];
-        op = {};
     end
     % PUBLIC PROPERTIES-------------------------------------------------%
     
@@ -49,20 +44,19 @@ classdef MWPI < PTB.Object
         function mwpi = MWPI(varargin)
             mwpi = mwpi@PTB.Object([],'mwpi');
             
-            mwpi.nRun = MWPI.Param('exp','nRun');
-			mwpi.nBlock = MWPI.Param('exp','nBlock');
-            
-            mwpi.argin = varargin;
-            
             % build opt struct for experiment
             opt = ParseArgs(varargin, ...
                 'debug'		,   0, ...
 				'practice'	,	false ...
                 );
+            
+            mwpi.argin = varargin;
+            mwpi.bPractice = opt.practice;
+            
             opt.name = 'mwpi';
             opt.context = conditional(opt.practice,'psychophysics','fmri');
             opt.tr = MWPI.Param('time','tr');
-            opt.input_scheme = 'lr';
+            opt.input_scheme = 'lrud';
             opt.disable_key = false;
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');
@@ -74,13 +68,6 @@ classdef MWPI < PTB.Object
             % create experiment
             mwpi.Experiment = PTB.Experiment(cOpt{:});
             mwpi.Start;
-            
-            % hack to get the joystick to work (the triggers don't seem to
-            % work)
-            if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
-                mwpi.Experiment.Input.Set('left','lupper');
-                mwpi.Experiment.Input.Set('right','rupper');
-            end
             
             % initialize experiment
             mwpi.Init;           
