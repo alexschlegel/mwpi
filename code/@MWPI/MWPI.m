@@ -52,6 +52,9 @@ classdef MWPI < PTB.Object
             
             mwpi.argin = varargin;
             mwpi.bPractice = opt.practice;
+			strDomain = conditional(opt.practice, 'practice', 'exp');
+			mwpi.nRun = MWPI.Param(strDomain, 'nRun');
+			mwpi.nBlock = MWPI.Param(strDomain, 'nBlock');
             
             opt.name = 'mwpi';
             opt.context = conditional(opt.practice,'psychophysics','fmri');
@@ -69,7 +72,7 @@ classdef MWPI < PTB.Object
             mwpi.Experiment = PTB.Experiment(cOpt{:});
             mwpi.Start;
             
-            % initialize experiment
+            % initialize experiment (sets reward and sParam)
             mwpi.Init;           
                       
         end

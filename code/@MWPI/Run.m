@@ -1,11 +1,7 @@
-function Run(mwpi, varargin)
+function Run(mwpi)
 % Run - do an MWPI run.
 % 
-% Syntax: mwpi.Run(<options>)
-%
-% In:
-%	options:
-%		'mapping'	(true) Show the mapping before the run, until the scanner starts
+% Syntax: mwpi.Run
 %
 % Updated: 2015-06-24
 %
@@ -24,29 +20,18 @@ finished = false;
 % cleanup function
 cleanupObj = onCleanup(@cleanupfn);
 
-% parse arguments
-opt = ParseArgs(varargin, 'mapping', true);
-
-% calculate which run to execute
+% calculate default run to execute
 sResults = exp.Info.Get('mwpi','result');
-kRun = numel(sResults) + 1;
+kRunDefault = min([numel(sResults) + 1, mwpi.nRun]);
+kRun = 0;
 
-if kRun > mwpi.nRun
-    bContinue = exp.Prompt.YesNo(['Current run (' num2str(kRun) ...
-        ') exceeds planned number of runs (' num2str(mwpi.nRun) '). Continue?'], ...
-        'mode', 'command_window');
-    if ~bContinue
-        return;
-    end
+while ~ismember(kRun, 1:mwpi.nRun)
+	kRunInput = exp.Prompt.Ask(['Which run (max = ',mwpi.nRun,')'],...
+		'mode','command_window','default',kRunDefault);
+	kRun = str2double(kRunInput);
 end
 
 exp.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
-
-% show the mapping
-if opt.mapping
-    mwpi.Mapping('wait',false);
-	exp.Window.Flip('waiting for scanner');
-end
 
 % scanner starts
 tRun = MWPI.Param('time','run');
@@ -64,17 +49,17 @@ sRun.res = [];
     sRun.res = [];
 		
 	% initialize texture handles
-	sHandle.prompt = exp.Window.OpenTexture('prompt');
-	sHandle.task = exp.Window.OpenTexture('task');
-    sHandle.probe = exp.Window.OpenTexture('probe');
-    sHandle.probeYes = exp.Window.OpenTexture('probeYes');
-    sHandle.probeNo = exp.Window.OpenTexture('probeNo');
-    sHandle.done = exp.Window.OpenTexture('done');
+	sHandle.prompt		= exp.Window.OpenTexture('prompt');
+	sHandle.retention	= exp.Window.OpenTexture('retention');
+	sHandle.test		= exp.Window.OpenTexture('test');
+    sHandle.done		= exp.Window.OpenTexture('done');
     
     % make done screen
     exp.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
         '><color:' MWPI.Param('text','colDone') '>RELAX!</color></size>'], ...
         'window','done');
+	
+	%----------------------- EDIT LINE ----------------------------%
 	
 	cFProbe   = {@DoBlock; @DoFeedback; @DoRest};
 	cFNoProbe = {@DoBlock; @DoRest};

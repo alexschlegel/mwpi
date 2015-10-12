@@ -25,7 +25,13 @@ function Init(mwpi)
     end
     
  % get experiment parameters, # of runs and # of blocks per run
- [mwpi.sParam, mwpi.nRun, mwpi.nBlock] = MWPI.CalcParams('practice', mwpi.bPractice);
+	 % check if we're resuming an existing session
+	 mwpi.sParam = mwpi.Experiment.Info.Get('mwpi','param');
+
+	 if isempty(mwpi.sParam)
+		mwpi.sParam = MWPI.CalcParams('practice', mwpi.bPractice);
+		mwpi.Experiment.Info.Set('mwpi','param',mwpi.sParam);
+	 end
     
 mwpi.Experiment.AddLog('initialized experiment');
 

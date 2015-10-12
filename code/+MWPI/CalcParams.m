@@ -10,8 +10,6 @@ function s = CalcParams(varargin)
 %   <options>:
 %       practice: [false] if true, this is a practice run.
 %
-% ------------------- EDIT LINE ---------------------------------------
-%
 % Out: the parameter struct (also saved to PTBIFO.mwpi.run.param(end+1) ):
 %		All fields are 1xnBlock arrays unless otherwise indicated.
 %       All figures and operations are before applying the mapping.
