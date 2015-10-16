@@ -7,10 +7,16 @@ function Init(mwpi)
 %
 % Updated: 2015-08-10
 
+% hack to get the joystick to work (the triggers don't seem to
+% work)
+if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
+	mwpi.Experiment.Input.Set('left','lupper');
+	mwpi.Experiment.Input.Set('right','rupper');
+end
+
 % define keys
     mwpi.Experiment.Input.Set('response', MWPI.Param('key','response'));
-    mwpi.Experiment.Input.Set('exactMatch', MWPI.Param('key','exactMatch'));
-    mwpi.Experiment.Input.Set('classMatch', MWPI.Param('key','classMatch'));
+    mwpi.Experiment.Input.Set('match', MWPI.Param('key','match'));
     mwpi.Experiment.Input.Set('noMatch', MWPI.Param('key','noMatch'));
 
 %set the reward

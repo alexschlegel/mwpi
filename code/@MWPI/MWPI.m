@@ -54,12 +54,12 @@ classdef MWPI < PTB.Object
             mwpi.bPractice = opt.practice;
 			strDomain = conditional(opt.practice, 'practice', 'exp');
 			mwpi.nRun = MWPI.Param(strDomain, 'nRun');
-			mwpi.nBlock = MWPI.Param(strDomain, 'nBlock');
+			mwpi.nBlock = MWPI.Param(strDomain, 'run', 'nBlock');
             
             opt.name = 'mwpi';
             opt.context = conditional(opt.practice,'psychophysics','fmri');
             opt.tr = MWPI.Param('time','tr');
-            opt.input_scheme = 'lrud';
+            opt.input_scheme = 'lr';
             opt.disable_key = false;
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');

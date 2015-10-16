@@ -38,7 +38,6 @@ tRun = MWPI.Param('time','run');
 exp.Scanner.StartScan(tRun);
 
 % get run ready
-sRun = mwpi.PrepRun;
 sRun.res = [];
 
 % perform the run
