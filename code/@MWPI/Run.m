@@ -15,7 +15,7 @@ sRun = struct('res',[]);
 global sHandle;
 sHandle = [];
 global finished;
-finished = false;
+finished = false; %#ok<NASGU>
 
 % cleanup function
 cleanupObj = onCleanup(@cleanupfn);
@@ -48,51 +48,30 @@ sRun.res = [];
     sRun.res = [];
 		
 	% initialize texture handles
-	sHandle.prompt		= exp.Window.OpenTexture('prompt');
-	sHandle.retention	= exp.Window.OpenTexture('retention');
+	sHandle.prompt1		= exp.Window.OpenTexture('prompt1');
+	sHandle.prompt2		= exp.Window.OpenTexture('prompt2');
+	sHandle.retention	= exp.Window.OpenTexture('retention'); 
 	sHandle.test		= exp.Window.OpenTexture('test');
+	sHandle.testYes		= exp.Window.OpenTexture('testYes');
+	sHandle.testNo		= exp.Window.OpenTexture('testNo');
     sHandle.done		= exp.Window.OpenTexture('done');
     
     % make done screen
     exp.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
         '><color:' MWPI.Param('text','colDone') '>RELAX!</color></size>'], ...
         'window','done');
-	
-	%----------------------- EDIT LINE ----------------------------%
-	
-	cFProbe   = {@DoBlock; @DoFeedback; @DoRest};
-	cFNoProbe = {@DoBlock; @DoRest};
-	
-	cFTrials  = conditional(reshape(sRun.bProbe,[],1),cFProbe,cFNoProbe);
-	cFTrials  = cellnestflatten(cFTrials);
 
     % set up sequence %
-    cF = [  {@DoMapping}
-			{@DoRest}
-			cFTrials          
+    cF = [	{@DoRest}
+			repmat({@DoBlock; @DoRest}, mwpi.nBlock,1)          
             {@DoDone}
           ];
       
-    trMapping	= MWPI.Param('time','mapping');
-	trPre		= MWPI.Param('time','pre');
-    trBlock		= MWPI.Param('time', 'block');
-    trFeedback	= MWPI.Param('time','feedback');
-    trRest		= MWPI.Param('time','rest');
-	
-	tSeqProbe   = [trBlock; trFeedback; trRest];
-	tSeqNoProbe = [trBlock; trRest];
-	
-	tSeqTrials = conditional(sRun.bProbe,{tSeqProbe},{tSeqNoProbe});
-	
-	% fix timing of probe blocks
-	tSeqTrials = cellfun(@(tSeq, bP, kB) FixProbeTiming(tSeq,bP,sRun, kB), ...
-		tSeqTrials, num2cell(sRun.bProbe),num2cell(1:mwpi.nBlock),'uni',false);
-	
-	tSeqTrials = cell2mat(reshape(tSeqTrials,[],1));
+    trBlock		= MWPI.Param('exp','block','time');
+    trRest		= MWPI.Param('exp','rest','time');
       
-    tSequence = cumsum([ trMapping
-						 trPre
-                         tSeqTrials
+    tSequence = cumsum([ trRest
+                         repmat([trBlock; trRest], mwpi.nBlock, 1)
                          1
                          ]) + 1;
 								
@@ -101,7 +80,8 @@ sRun.res = [];
 	[sRun.tStart, sRun.tEnd, sRun.tSequence, sRun.bAbort] = ...
 		exp.Sequence.Linear(cF,tSequence, ...
 		'tstart',1,			...
-		'tbase','absolute' ...
+		'tbase','absolute', ...
+		'tunit','tr'		...
 		);
 	
 	% scanner ends
@@ -116,17 +96,6 @@ clear cleanupObj;
 %======================= Nested Functions ==========================%
 
 %----------------------------------------------------------------------%
-	function tNow = DoMapping(tNow, ~)
-		% show the mapping
-		
-		if ~opt.mapping
-			mwpi.Mapping('wait',false);
-			exp.Window.Flip;
-		end
-		
-		exp.Scheduler.Wait;
-	end
-%----------------------------------------------------------------------%
     function tNow = DoRest(tNow, ~)
         % Blank the screen, and if there is another block coming up,
         % prepare the textures for that block.
@@ -136,7 +105,7 @@ clear cleanupObj;
         
         if kBlock < mwpi.nBlock
             kBlock = kBlock + 1;
-            mwpi.PrepTextures(sRun, kBlock);
+            mwpi.PrepTextures(kRun, kBlock);
         end
         
         exp.Scheduler.Wait;
@@ -201,27 +170,6 @@ clear cleanupObj;
 end
 
 % ==================== Local Functions =============================%
-
-%----------------------------------------------------------------------%
-	function tSeqTrials = FixProbeTiming(tSeqIn, bProbe, sRun, kBlock)
-		% fix timing of probe blocks
-		% since the probe onset timing is random, the time the probe blocks
-		% end is also random, so we lengthen the feedback period to
-		% compensate.
-		
-		if ~bProbe
-			tSeqTrials = tSeqIn;
-		else
-			tBlock = MWPI.Param('time','prompt') + sRun.tProbe(kBlock) + ...
-					 MWPI.Param('time','probe');
-			tExtra = MWPI.Param('time','block') - tBlock;
-			
-			tSeqTrials = [ tSeqIn(1) - tExtra
-						   tSeqIn(2) + tExtra
-						   tSeqIn(3:end)
-						 ];
-		end
-	end
 
     function cleanupfn
         % cleanup if the run is interrupted / when it ends

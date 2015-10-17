@@ -23,7 +23,7 @@ function s = CalcParams(varargin)
 %		s.prompt2Class: class of second presented prompt figure
 %		s.wClass:		class of working memory (cued) prompt figure
 %		s.dClass:		class of distractor (non-cued) prompt figure
-%		s.Cue:			1 or 2, specifies which prompt to cue
+%		s.cue:			1 or 2, specifies which prompt to cue
 %		s.vClass:		class of visual figure (during retention)
 %		s.bTestMatch:  true if test matches the cued prompt i.e. the wm figure
 
@@ -49,7 +49,7 @@ s.wClass = arrayfun(@(ind) arrClassComb{ind}(1), indClassComb);
 s.dClass = arrayfun(@(ind) arrClassComb{ind}(2), indClassComb);
 
 % which to cue?
-s.Cue = blockdesign(1:2, nBlock/2, nRun);
+s.cue = blockdesign(1:2, nBlock/2, nRun);
 
 s.prompt1Class = conditional(s.Cue == 1, s.wClass, s.dClass);
 s.prompt2Class = conditional(s.Cue == 2, s.wClass, s.dClass);

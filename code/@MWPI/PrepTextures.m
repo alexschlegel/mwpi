@@ -1,61 +1,36 @@
-function PrepTextures(mwpi, sRun, kBlock)
+function PrepTextures(mwpi, kRun, kBlock)
 % PrepTextures - prepare the textures for a single block of mwpi.
 %	They should have already been opened by the calling function.
-%	Textures:	'prompt'				== prompt screen
-%				'task'          		== screen with visual stimulus (before probe)
-%               'probe'                 == probe figure (only if this is
-%                                          a probe block, otherwise blank)
-%               'probeYes'              == same as probe, but with a green probe
-%               'probeNo'               == same as probe, but with a red probe
+%	Textures:	'prompt1':		first of 2 wm prompts
+%				'prompt2':		second of 2 wm prompts
+%				'retention':	visual stim during retention period
+%				'test'			wm test after retention
+%				'testYes'		test in color indicating success
+%				'testNo'		test in color indicating failure
 %
-%	Syntax: mwpi.PrepTextures(sRun, kBlock)
+%	Syntax: mwpi.PrepTextures(kRun, kBlock)
 %
-%	Input:	sRun: the struct of parameters for the current run
+%	Input:	kRun:   the current run
 %			kBlock: the current block
 %
-%	Updated: 2015-06-24
+%	Updated: 2015-10-16
 
-% verify block
+sParam = mwpi.sParam;
 
-if kBlock > numel(sRun.bProbe)
+% verify block and run
+if kBlock > size(sParam.cue, 2)
 	error('Block out of range');
+elseif kRun > size(sParam.cue, 1)
+	error('Run out of range');
 end
 
 shw = mwpi.Experiment.Show;
 stimSz = MWPI.Param('size','stim');
-probeSz = MWPI.Param('size','probe');
 
-% task screen
-shw.Blank('window','task');
+% generate some seeds manually, so we can avoid a repeat in the very unlikely
+% case that one occurs
 
-[vRot, vFlip] = MWPI.Operate(sRun.vOp(kBlock), 'map', mwpi.opMap, 'initflip', 'h');
-vStim = MWPI.Stim.Stimulus(sRun.vFig(kBlock), 'map', mwpi.figMap, ...
-    'rotation', vRot, 'flip', vFlip);
-
-shw.Image(vStim, [], stimSz, 'window', 'task');
-
-% prompt screen
-% start with task screen
-shw.Texture('task','window','prompt');
-mwpi.ShowPrompt(sRun, kBlock, 'window','prompt','transparent',true);
-
-% copy task screen to probe windows
-shw.Blank('window','probe');
-shw.Blank('window','probeYes');
-shw.Blank('window','probeNo');
-
-if sRun.bProbe(kBlock)
-    
-    % probe screens    
-   initflip = conditional(sRun.bProbeHFlip(kBlock), 'h', 0);
-    [pRot, pFlip] = MWPI.Operate(sRun.pOp(kBlock), 'map', mwpi.opMap, 'initflip', initflip);
-    
-    [pStim, bStim] = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
-        'rotation', pRot, 'flip', pFlip, 'color', MWPI.Param('color','probe'));
-    pStimYes = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
-        'rotation', pRot, 'flip', pFlip, 'color', MWPI.Param('color','yes'));
-    pStimNo = MWPI.Stim.Stimulus(sRun.pFig(kBlock), 'map', mwpi.figMap, ...
-        'rotation', pRot, 'flip', pFlip, 'color', MWPI.Param('color','no'));
+%--------------- EDIT LINE --------------------------------%
     
     shw.Image(cat(3,pStim,bStim), [], probeSz, 'window', 'probe');
     shw.Image(cat(3,pStimYes,bStim), [], probeSz, 'window', 'probeYes');

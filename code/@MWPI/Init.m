@@ -15,9 +15,11 @@ if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
 end
 
 % define keys
-    mwpi.Experiment.Input.Set('response', MWPI.Param('key','response'));
-    mwpi.Experiment.Input.Set('match', MWPI.Param('key','match'));
-    mwpi.Experiment.Input.Set('noMatch', MWPI.Param('key','noMatch'));
+    mwpi.Experiment.Input.Set('response',	MWPI.Param('key','response'));
+    mwpi.Experiment.Input.Set('match',		MWPI.Param('key','match'));
+    mwpi.Experiment.Input.Set('noMatch',	MWPI.Param('key','noMatch'));
+	mwpi.Experiment.Input.Set('shrink',		MWPI.Param('key','shrink'));
+	mwpi.Experiment.Input.Set('grow',		MWPI.Param('key','grow'));
 
 %set the reward
     if ~mwpi.bPractice
