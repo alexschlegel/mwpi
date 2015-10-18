@@ -50,6 +50,7 @@ sRun.res = [];
 	% initialize texture handles
 	sHandle.prompt1		= exp.Window.OpenTexture('prompt1');
 	sHandle.prompt2		= exp.Window.OpenTexture('prompt2');
+	sHandle.cue			= exp.Window.OpenTexture('cue');
 	sHandle.retention	= exp.Window.OpenTexture('retention'); 
 	sHandle.test		= exp.Window.OpenTexture('test');
 	sHandle.testYes		= exp.Window.OpenTexture('testYes');
