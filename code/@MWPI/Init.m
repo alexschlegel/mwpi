@@ -7,6 +7,8 @@ function Init(mwpi)
 %
 % Updated: 2015-08-10
 
+strDomain = conditional(mwpi.bPractice, 'practice','exp');
+
 % hack to get the joystick to work (the triggers don't seem to
 % work)
 if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
@@ -22,16 +24,22 @@ end
 	mwpi.Experiment.Input.Set('grow',		MWPI.Param('key','grow'));
 
 %set the reward
-    if ~mwpi.bPractice
+	if ~mwpi.bPractice
         % check if we're resuming an existing session
-        mwpi.reward = mwpi.Experiment.Info.Get('mwpi','reward');
+        mwpi.reward = mwpi.Experiment.Info.Get('mwpi','currReward');
 
         if isempty(mwpi.reward)
             mwpi.reward	= MWPI.Param('reward','base');
-            mwpi.Experiment.Info.Set('mwpi','reward',mwpi.reward);
+            mwpi.Experiment.Info.Set('mwpi','currReward',mwpi.reward);
         end
-    end
-    
+	end
+	
+% set the level
+	mwpi.level = exp.Info.Get('mwpi','currLevel');
+	if isempty(mwpi.level)
+		mwpi.level = MWPI.Param(strDomain, startLevel);
+	end
+	
  % get experiment parameters, # of runs and # of blocks per run
 	 % check if we're resuming an existing session
 	 mwpi.sParam = mwpi.Experiment.Info.Get('mwpi','param');

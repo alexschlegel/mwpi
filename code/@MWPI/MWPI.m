@@ -28,8 +28,10 @@ classdef MWPI < PTB.Object
         sParam;
         bPractice;
                 
-        % running reward total
+        % updated each block
         reward;
+		level;
+		nCorrect; % per block
     end
     % PUBLIC PROPERTIES-------------------------------------------------%
     

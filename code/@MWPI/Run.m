@@ -7,9 +7,9 @@ function Run(mwpi)
 %
 
 % global vars so cleanup will work
-global exp;
-exp = mwpi.Experiment;
-global sResults;
+% even though they are global they are NOT used outside of this file!
+global mwpi_g;
+mwpi_g = mwpi;
 global sRun;
 sRun = struct('res',[]);
 global sHandle;
@@ -19,6 +19,8 @@ finished = false; %#ok<NASGU>
 
 % cleanup function
 cleanupObj = onCleanup(@cleanupfn);
+
+exp = mwpi.Experiment;
 
 % calculate default run to execute
 sResults = exp.Info.Get('mwpi','result');
@@ -37,16 +39,12 @@ exp.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
 tRun = MWPI.Param('time','run');
 exp.Scanner.StartScan(tRun);
 
-% get run ready
-sRun.res = [];
-
 % perform the run
 
 	% shared variables
     kBlock = 0;
-    nCorrect = 0;
-    sRun.res = [];
-		
+    mwpi.nCorrect = 0;
+	
 	% initialize texture handles
 	sHandle.prompt1		= exp.Window.OpenTexture('prompt1');
 	sHandle.prompt2		= exp.Window.OpenTexture('prompt2');
@@ -104,9 +102,11 @@ clear cleanupObj;
         exp.Show.Blank;       
         exp.Window.Flip;
         
+		mwpi.level = fUpdateLevel(sRun.res);
+		
         if kBlock < mwpi.nBlock
             kBlock = kBlock + 1;
-            mwpi.PrepTextures(kRun, kBlock);
+            mwpi.PrepTextures(kRun, kBlock, mwpi.level);
         end
         
         exp.Scheduler.Wait;
@@ -117,57 +117,16 @@ clear cleanupObj;
         
         exp.AddLog(['block ' num2str(kBlock) ' start']);
         
-        resCur = mwpi.Block(sRun, kBlock, sHandle);
+        resCur = mwpi.Block(kRun, kBlock, sHandle);
+		
+		resCur.level =  mwpi.level;
         
         if isempty(sRun.res)
             sRun.res = resCur;
         else
             sRun.res(end+1) = resCur;
         end    
-    end
-%--------------------------------------------------------------------%
-    function tNow = DoFeedback(tNow, ~)
-        % update correct total, reward, show feedback screen
-        
-		bCorrect = sRun.res(end).bCorrect;
-
-		% add a log message
-		nCorrect    = nCorrect + bCorrect;
-		strCorrect  = conditional(bCorrect,'y','n');
-		strTally    = [num2str(nCorrect) '/' num2str(sRun.kProbe(kBlock))];
-
-		exp.AddLog(['feedback (' strCorrect ', ' strTally ')']);
-
-		% show feedback texture and updated reward
-		if bCorrect
-			winFeedback = 'probeYes';
-			strFeedback = 'Yes!';
-			strColor = MWPI.Param('text','colYes');
-			dWinning = MWPI.Param('reward','rewardPerBlock');
-		else
-			winFeedback = 'probeNo';
-			strFeedback = 'No!';
-			strColor = MWPI.Param('text','colNo');
-			dWinning = -MWPI.Param('reward','penaltyPerBlock');
-		end
-		mwpi.reward = max(mwpi.reward + dWinning, MWPI.Param('reward','base'));
-
-		strText = ['<color:' strColor '>' strFeedback ' (' ...
-			StringMoney(dWinning,'sign',true) ')</color>\nCurrent total: ' ...
-			StringMoney(mwpi.reward)];
-
-		exp.Show.Text(strText,[0,MWPI.Param('text','fbOffset')], ...
-			'window', winFeedback);
-      
-        exp.Show.Texture(winFeedback);
-        exp.Window.Flip;
-    end
-%----------------------------------------------------------------------------------%
-    function  tNow = DoDone(tNow,~)
-        exp.Show.Texture(sHandle.done);
-        exp.Window.Flip;
-    end
-%-----------------------------------------------------------------------------------%
+	end
 end
 
 % ==================== Local Functions =============================%
@@ -175,10 +134,11 @@ end
     function cleanupfn
         % cleanup if the run is interrupted / when it ends
         global sHandle;
-        global exp;
+        global mwpi_g;
         global sRun;
-        global sResults;
         global finished;
+		
+		exp = mwpi_g.Experiment;
         
         % close textures
         if isstruct(sHandle)
@@ -197,12 +157,15 @@ end
             end
             
             if bSave
-                if isempty(sResults)
-                    sResults = sRun;
+				sRuns = exp.Info.Get('mwpi','run');
+                if isempty(sRuns)
+                    sRuns = sRun;
                 else
-                    sResults(end+1) = sRun;
+                    sRuns(end+1) = sRun;
                 end
-                exp.Info.Set('mwpi','result',sResults);
+                exp.Info.Set('mwpi','run', sRuns);
+				exp.Info.Set('mwpi','currLevel',mwpi_g.level);
+				exp.Info.Set('mwpi','currReward',mwpi_g.reward);
                 exp.Info.AddLog('Results saved.');
             end
         end
