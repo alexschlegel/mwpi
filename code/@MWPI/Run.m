@@ -11,32 +11,38 @@ function Run(mwpi)
 global mwpi_g;
 mwpi_g = mwpi;
 global sRun;
-sRun = struct('res',[]);
+sRun = struct('res',[], 'tStart', [], 'tEnd', [], 'tSequence', [], 'bAbort',[]);
 global sHandle;
 sHandle = [];
 global finished;
 finished = false; %#ok<NASGU>
+global kRun;
 
 % cleanup function
 cleanupObj = onCleanup(@cleanupfn);
 
 exp = mwpi.Experiment;
 
+% for testing
+fUpdateLevel = @(res) 10;
+
 % calculate default run to execute
-sResults = exp.Info.Get('mwpi','result');
+sResults = exp.Info.Get('mwpi','run');
 kRunDefault = min([numel(sResults) + 1, mwpi.nRun]);
 kRun = 0;
 
+% prompt which run to run
 while ~ismember(kRun, 1:mwpi.nRun)
-	kRunInput = exp.Prompt.Ask(['Which run (max = ',mwpi.nRun,')'],...
-		'mode','command_window','default',kRunDefault);
+	kRunInput = exp.Prompt.Ask(['Which run (max=', num2str(mwpi.nRun),')'],...
+		'mode','command_window','default', num2str(kRunDefault));
 	kRun = str2double(kRunInput);
 end
 
 exp.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
 
 % scanner starts
-tRun = MWPI.Param('time','run');
+ListenChar(2);
+tRun = MWPI.Param('exp','run','time');
 exp.Scanner.StartScan(tRun);
 
 % perform the run
@@ -52,26 +58,19 @@ exp.Scanner.StartScan(tRun);
 	sHandle.retention	= exp.Window.OpenTexture('retention'); 
 	sHandle.test		= exp.Window.OpenTexture('test');
 	sHandle.testYes		= exp.Window.OpenTexture('testYes');
-	sHandle.testNo		= exp.Window.OpenTexture('testNo');
-    sHandle.done		= exp.Window.OpenTexture('done');
-    
-    % make done screen
-    exp.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
-        '><color:' MWPI.Param('text','colDone') '>RELAX!</color></size>'], ...
-        'window','done');
+	sHandle.testNo		= exp.Window.OpenTexture('testNo');    
 
     % set up sequence %
-    cF = [	{@DoRest}
-			repmat({@DoBlock; @DoRest}, mwpi.nBlock,1)          
+    cF = [	repmat({@DoRest; @DoBlock}, mwpi.nBlock,1)
             {@DoDone}
           ];
       
     trBlock		= MWPI.Param('exp','block','time');
     trRest		= MWPI.Param('exp','rest','time');
+	trPost		= MWPI.Param('exp','post','time');
       
-    tSequence = cumsum([ trRest
-                         repmat([trBlock; trRest], mwpi.nBlock, 1)
-                         1
+    tSequence = cumsum([ repmat([trRest; trBlock], mwpi.nBlock, 1)
+						 trPost
                          ]) + 1;
 								
 	% go!
@@ -87,6 +86,7 @@ exp.Scanner.StartScan(tRun);
 	exp.Scanner.StopScan;
 
 % finish up
+ListenChar(0);
 exp.AddLog(['Run ' num2str(kRun) ' complete']);
 
 finished = true;
@@ -100,8 +100,8 @@ clear cleanupObj;
         % prepare the textures for that block.
         
         exp.Show.Blank;       
-        exp.Window.Flip;
-        
+        exp.Window.Flip;        
+		
 		mwpi.level = fUpdateLevel(sRun.res);
 		
         if kBlock < mwpi.nBlock
@@ -127,8 +127,26 @@ clear cleanupObj;
             sRun.res(end+1) = resCur;
         end    
 	end
-end
 
+%--------------------------------------------------------------------%
+	function tNow = DoDone(tNow, ~)
+		% show the done screen
+		
+		exp.Show.Blank('fixation',false);
+		exp.Window.Flip;
+		
+		mwpi.level = fUpdateLevel(sRun.res);
+
+		% wait for a second
+		pause(1);
+		
+		exp.Show.Text(['<size:' num2str(MWPI.Param('text','sizeDone')) ...
+			'><color:' MWPI.Param('text','colDone') '>RELAX!</color></size>']);
+		exp.Window.Flip;
+		
+		exp.Scheduler.Wait;
+	end
+end
 % ==================== Local Functions =============================%
 
     function cleanupfn
@@ -137,6 +155,7 @@ end
         global mwpi_g;
         global sRun;
         global finished;
+		global kRun;
 		
 		exp = mwpi_g.Experiment;
         
@@ -158,11 +177,11 @@ end
             
             if bSave
 				sRuns = exp.Info.Get('mwpi','run');
-                if isempty(sRuns)
-                    sRuns = sRun;
-                else
-                    sRuns(end+1) = sRun;
-                end
+				if isempty(sRuns)
+					sRuns = sRun;
+				else
+					sRuns(kRun) = sRun;   
+				end
                 exp.Info.Set('mwpi','run', sRuns);
 				exp.Info.Set('mwpi','currLevel',mwpi_g.level);
 				exp.Info.Set('mwpi','currReward',mwpi_g.reward);

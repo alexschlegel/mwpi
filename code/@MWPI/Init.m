@@ -35,9 +35,9 @@ end
 	end
 	
 % set the level
-	mwpi.level = exp.Info.Get('mwpi','currLevel');
+	mwpi.level = mwpi.Experiment.Info.Get('mwpi','currLevel');
 	if isempty(mwpi.level)
-		mwpi.level = MWPI.Param(strDomain, startLevel);
+		mwpi.level = MWPI.Param(strDomain, 'startLevel');
 	end
 	
  % get experiment parameters, # of runs and # of blocks per run

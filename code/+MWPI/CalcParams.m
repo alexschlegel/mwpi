@@ -42,21 +42,22 @@ nRepComb =  MWPI.Param(strDomain, 'run','nCondRep');
 nBlock   =  MWPI.Param(strDomain, 'run','nBlock');
 nRepClass = nBlock/numel(arrClass);
 
-% prompt classes
+% cued and retention period classes
 indClassComb = blockdesign(1:numel(arrClassComb),nRepComb,nRun);
 
 s.wClass = arrayfun(@(ind) arrClassComb{ind}(1), indClassComb);
-s.dClass = arrayfun(@(ind) arrClassComb{ind}(2), indClassComb);
+s.vClass = arrayfun(@(ind) arrClassComb{ind}(2), indClassComb);
+
+% non-cued stimulus class
+s.dClass = blockdesign(arrClass, nRepClass, nRun);
 
 % which to cue?
 s.cue = blockdesign(1:2, nBlock/2, nRun);
 
-s.prompt1Class = conditional(s.Cue == 1, s.wClass, s.dClass);
-s.prompt2Class = conditional(s.Cue == 2, s.wClass, s.dClass);
+s.prompt1Class = conditional(s.cue == 1, s.wClass, s.dClass);
+s.prompt2Class = conditional(s.cue == 2, s.wClass, s.dClass);
 
+% which tests match cued prompt?
 s.bTestMatch = blockdesign([true,false], nBlock/2, nRun);
-
-% visual stimulus
-s.vClass = blockdesign(arrClass, nRepClass, nRun);
 	
 end
