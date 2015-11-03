@@ -22,28 +22,32 @@ global kRun;
 cleanupObj = onCleanup(@cleanupfn);
 
 exp = mwpi.Experiment;
+strDomain = conditional(mwpi.bPractice, 'practice', 'exp');
 
-% for testing
-fUpdateLevel = @(res) 10;
+if mwpi.nRun > 1
+	% calculate default run to execute
+	sResults = exp.Info.Get('mwpi','run');
+	kRunDefault = min([numel(sResults) + 1, mwpi.nRun]);
+	kRun = 0;
 
-% calculate default run to execute
-sResults = exp.Info.Get('mwpi','run');
-kRunDefault = min([numel(sResults) + 1, mwpi.nRun]);
-kRun = 0;
-
-% prompt which run to run
-while ~ismember(kRun, 1:mwpi.nRun)
-	kRunInput = exp.Prompt.Ask(['Which run (max=', num2str(mwpi.nRun),')'],...
-		'mode','command_window','default', num2str(kRunDefault));
-	kRun = str2double(kRunInput);
+	% prompt which run to run
+	while ~ismember(kRun, 1:mwpi.nRun)
+		kRunInput = exp.Prompt.Ask(['Which run (max=', num2str(mwpi.nRun),')'],...
+			'mode','command_window','default', num2str(kRunDefault));
+		kRun = str2double(kRunInput);
+	end
+else
+	kRun = 1;
 end
 
 exp.AddLog(['Starting run ' num2str(kRun) ' of ' num2str(mwpi.nRun)]);
 
-% scanner starts
 ListenChar(2);
-tRun = MWPI.Param('exp','run','time');
+
+% scanner starts
+tRun = MWPI.Param(strDomain,'run','time');
 exp.Scanner.StartScan(tRun);
+
 
 % perform the run
 
@@ -72,6 +76,9 @@ exp.Scanner.StartScan(tRun);
     tSequence = cumsum([ repmat([trRest; trBlock], mwpi.nBlock, 1)
 						 trPost
                          ]) + 1;
+	
+	fUpdateLevel = MWPI.Param(strDomain,'fUpdateLevel');
+	
 								
 	% go!
     
@@ -84,6 +91,7 @@ exp.Scanner.StartScan(tRun);
 	
 	% scanner ends
 	exp.Scanner.StopScan;
+	
 
 % finish up
 ListenChar(0);
@@ -96,18 +104,19 @@ clear cleanupObj;
 
 %----------------------------------------------------------------------%
     function tNow = DoRest(tNow, ~)
-        % Blank the screen, and if there is another block coming up,
-        % prepare the textures for that block.
+        % Blank the screen, update the level, and
+        % prepare the textures for the next block.
         
         exp.Show.Blank;       
         exp.Window.Flip;        
 		
-		mwpi.level = fUpdateLevel(sRun.res);
+		kBlock = kBlock + 1;
 		
-        if kBlock < mwpi.nBlock
-            kBlock = kBlock + 1;
-            mwpi.PrepTextures(kRun, kBlock, mwpi.level);
-        end
+		if kBlock > 1
+			mwpi.level = fUpdateLevel(sRun.res);
+		end
+		            
+        mwpi.PrepTextures(kRun, kBlock, mwpi.level);
         
         exp.Scheduler.Wait;
 	end
@@ -186,6 +195,16 @@ end
 				exp.Info.Set('mwpi','currLevel',mwpi_g.level);
 				exp.Info.Set('mwpi','currReward',mwpi_g.reward);
                 exp.Info.AddLog('Results saved.');
+				
+				if mwpi_g.bPractice
+					bCalc = exp.Prompt.YesNo('Calculate subject''s threshold level?', ...
+						'mode', 'command_window');
+					if bCalc
+						threshold = MWPI.CalcThreshold(sRun.res);
+						exp.Subject.Set('threshold', threshold);
+						exp.Subject.AddLog('Threshold saved to subject info.');
+					end
+				end
             end
         end
 	end

@@ -16,7 +16,6 @@ classdef MWPI < PTB.Object
 % In:
 %   <options>:
 %       debug:      (0) the debug level
-%		practice:	(false) we're doing practice rather than the real thing
 %
 % Updated: 2015-06-24
 
@@ -48,10 +47,11 @@ classdef MWPI < PTB.Object
             
             % build opt struct for experiment
             opt = ParseArgs(varargin, ...
-                'debug'		,   0, ...
-				'practice'	,	false ...
+                'debug'		,   0 ...
                 );
             
+			opt.practice = askyesno('Is this a training session?','dialog',false);
+			
             mwpi.argin = varargin;
             mwpi.bPractice = opt.practice;
 			strDomain = conditional(opt.practice, 'practice', 'exp');
@@ -60,6 +60,9 @@ classdef MWPI < PTB.Object
             
             opt.name = 'mwpi';
             opt.context = conditional(opt.practice,'psychophysics','fmri');
+			if opt.debug == 2 || opt.practice
+				opt.scanner_simulate = true;
+			end
             opt.tr = MWPI.Param('time','tr');
             opt.input_scheme = 'lr';
             opt.disable_key = false;

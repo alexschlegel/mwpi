@@ -1,7 +1,5 @@
 function Init(mwpi)
-% MWPI.Init
-%
-% Description: set up the experiment
+% Init - set up the mwpi experiment
 %
 % Syntax: mwpi.Init;
 %
@@ -36,8 +34,19 @@ end
 	
 % set the level
 	mwpi.level = mwpi.Experiment.Info.Get('mwpi','currLevel');
+	
 	if isempty(mwpi.level)
-		mwpi.level = MWPI.Param(strDomain, 'startLevel');
+		mwpi.level = MWPI.Param(strDomain, 'startLevel');		
+		
+		if ~mwpi.bPractice
+			threshold = mwpi.Experiment.Subject.Get('threshold');
+			
+			if isempty(threshold)
+				warning(['no threshold calculated, using default start level (' num2str(mwpi.level) ')']);
+			else
+				mwpi.level = threshold;
+			end
+		end
 	end
 	
  % get experiment parameters, # of runs and # of blocks per run

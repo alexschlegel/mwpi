@@ -230,8 +230,8 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 		mwpi.reward = res.rewardPost;
 		
 		if dRewardFixation ~= 0
-			strFixationFeedback = [num2str(nNo) ' cues missed <color:' strColNo ...
-				'>(' StringMoney(dRewardFixation,'sign',true) ')</color>\n'];
+			strFixationFeedback = [num2str(nNo) plural(nNo,' cue{,s} missed <color:')...
+				strColNo '>(' StringMoney(dRewardFixation,'sign',true) ')</color>\n'];
 		else
 			strFixationFeedback = '';
 		end
