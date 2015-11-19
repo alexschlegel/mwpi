@@ -11,7 +11,7 @@ function s = CalcParams(varargin)
 %       practice: [false] if true, this is a practice run.
 %
 % Out: the parameter struct (also saved to PTBIFO.mwpi.run.param):
-%		All fields are nRunxnBlock arrays unless otherwise indicated.
+%		All fields are nRun x nBlock arrays unless otherwise indicated.
 %
 %		Note that some fields are redundant for convenience. For instance,
 %		prompt1Class and prompt2Class together contain the same information
@@ -19,13 +19,14 @@ function s = CalcParams(varargin)
 %		first two are categorized by presentation order, and the second by
 %		which is cued.
 %
-%		s.prompt1Class: class of first presented prompt figure
-%		s.prompt2Class: class of second presented prompt figure
+%		s.lClass:		class of left prompt figure
+%		s.rClass:		class of right prompt figure
 %		s.wClass:		class of working memory (cued) prompt figure
 %		s.dClass:		class of distractor (non-cued) prompt figure
-%		s.cue:			1 or 2, specifies which prompt to cue
+%		s.cue:			1 or 2, specifies which prompt to cue (1 = left, 2 = right)
 %		s.vClass:		class of visual figure (during retention)
-%		s.bTestMatch:  true if test matches the cued prompt i.e. the wm figure
+%		s.posMatch:     position of the stimulus matching the cued prompt
+%						during the test: 1 = up, 2 = right, 3 = down, 4 = left
 
 % Updated: 2015-08-20
 
@@ -54,10 +55,10 @@ s.dClass = blockdesign(arrClass, nRepClass, nRun);
 % which to cue?
 s.cue = blockdesign(1:2, nBlock/2, nRun);
 
-s.prompt1Class = conditional(s.cue == 1, s.wClass, s.dClass);
-s.prompt2Class = conditional(s.cue == 2, s.wClass, s.dClass);
+s.lClass = conditional(s.cue == 1, s.wClass, s.dClass);
+s.rClass = conditional(s.cue == 2, s.wClass, s.dClass);
 
 % which tests match cued prompt?
-s.bTestMatch = blockdesign([true,false], nBlock/2, nRun);
+s.posMatch = blockdesign([1,2,3,4], nBlock/4, nRun);
 	
 end

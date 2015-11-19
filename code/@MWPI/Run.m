@@ -56,9 +56,8 @@ exp.Scanner.StartScan(tRun);
     mwpi.nCorrect = 0;
 	
 	% initialize texture handles
-	sHandle.prompt1		= exp.Window.OpenTexture('prompt1');
-	sHandle.prompt2		= exp.Window.OpenTexture('prompt2');
-	sHandle.cue			= exp.Window.OpenTexture('cue');
+	sHandle.stim		= exp.Window.OpenTexture('stim');
+	sHandle.arrow		= exp.Window.OpenTexture('arrow');
 	sHandle.retention	= exp.Window.OpenTexture('retention'); 
 	sHandle.test		= exp.Window.OpenTexture('test');
 	sHandle.testYes		= exp.Window.OpenTexture('testYes');
@@ -113,9 +112,9 @@ clear cleanupObj;
 		kBlock = kBlock + 1;
 		
 		if kBlock > 1
-			mwpi.level = fUpdateLevel(sRun.res);
+			mwpi.level = fUpdateLevel(sRun.res, mwpi.sParam, kRun);
 		end
-		            
+		
         mwpi.PrepTextures(kRun, kBlock, mwpi.level);
         
         exp.Scheduler.Wait;
@@ -197,10 +196,10 @@ end
                 exp.Info.AddLog('Results saved.');
 				
 				if mwpi_g.bPractice
-					bCalc = exp.Prompt.YesNo('Calculate subject''s threshold level?', ...
+					bCalc = exp.Prompt.YesNo('Calculate subject''s threshold levels?', ...
 						'mode', 'command_window');
 					if bCalc
-						threshold = MWPI.CalcThreshold(sRun.res);
+						threshold = MWPI.CalcThreshold(sRun.res, mwpi_g.sParam, kRun);
 						exp.Subject.Set('threshold', threshold);
 						exp.Subject.AddLog('Threshold saved to subject info.');
 					end

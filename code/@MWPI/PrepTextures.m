@@ -14,8 +14,8 @@ function PrepTextures(mwpi, kRun, kBlock, level)
 %
 %	In:	kRun:   the current run
 %		kBlock: the current block
-%		level:	an integer indicating the difficulty level (see MWPI.Param
-%				for valid range)
+%		level:	a nClass x 1 array of numbers in the range [0, 1]
+%				indicating the difficulty level for each class
 %
 %	Updated: 2015-10-17
 
@@ -29,22 +29,20 @@ elseif kRun > size(sParam.cue, 1)
 end
 
 shw = mwpi.Experiment.Show;
-bMatch = sParam.bTestMatch(kRun, kBlock);
 cue    = sParam.cue(kRun, kBlock);
 
-% make the cue
+% make the arrow
 
-shw.Blank('window', 'cue');
+shw.Blank('window', 'arrow');
 
-strCue		= num2str(cue);
-strSzCue	= num2str(MWPI.Param('cue', 'size'));
-posCue		= MWPI.Param('cue', 'pos');
+szArrow	  = MWPI.Param('arrow', 'size');
+rotArrow  = conditional(cue == 1, 0, 180);
 
-shw.Text(['<size:' strSzCue '>' strCue '</size>'], posCue, 'window', 'cue');
+shw.Image(mwpi.arrow, [], szArrow, rotArrow, 'window', 'arrow');
 
 % generate some seeds manually, so we can avoid a repeat in the very unlikely
 % case that one occurs
-nSeed = conditional(bMatch, 3, 4);
+nSeed = 3;
 
 bSeedsDone = false;
 while ~bSeedsDone
@@ -57,21 +55,22 @@ end
 % make the stimulus textures
 
 szStim  = MWPI.Param('stim', 'size');
+offset  = MWPI.Param('stim', 'offset');
 
-prompt1Class = sParam.prompt1Class(kRun, kBlock);
-[imPrompt1, imYes1, imNo1] = MWPI.Stimulus(prompt1Class, arrSeed(1), level, ...
-	'feedback', bMatch & cue == 1);
-shw.Blank('window', 'prompt1');
-shw.Image(imPrompt1, [], szStim, 'window', 'prompt1');
+shw.Blank('window', 'stim');
 
-prompt2Class = sParam.prompt2Class(kRun, kBlock);
-[imPrompt2, imYes2, imNo2] = MWPI.Stimulus(prompt2Class, arrSeed(2), level, ...
-	'feedback', bMatch & cue == 2);
-shw.Blank('window', 'prompt2');
-shw.Image(imPrompt2, [], szStim, 'window', 'prompt2');
+lClass = sParam.lClass(kRun, kBlock);
+[imPromptLeft, imYesLeft, imNoLeft, distractorsLeft] = MWPI.Stimulus(lClass, arrSeed(1), level(lClass), ...
+	'feedback', cue == 1, 'distractors', cue == 1);
+shw.Image(imPromptLeft, [-offset, 0], szStim, 'window', 'stim');
+
+rClass = sParam.rClass(kRun, kBlock);
+[imPromptRight, imYesRight, imNoRight, distractorsRight] = MWPI.Stimulus(rClass, arrSeed(2), level(rClass), ...
+	'feedback', cue == 2, 'distractors', cue == 2);
+shw.Image(imPromptRight, [offset, 0], szStim, 'window', 'stim');
 
 vClass = sParam.vClass(kRun, kBlock);
-imV = MWPI.Stimulus(vClass, arrSeed(3), level);
+imV = MWPI.Stimulus(vClass, arrSeed(3), level(vClass));
 shw.Blank('window', 'retention');
 shw.Image(imV, [], szStim, 'window', 'retention');
 
@@ -79,23 +78,34 @@ shw.Blank('window', 'test');
 shw.Blank('window', 'testYes');
 shw.Blank('window', 'testNo');
 
-if bMatch % use the prompted stimulus for the test
-	if cue == 1
-		shw.Image(imPrompt1, [], szStim, 'window', 'test');
-		shw.Image(imYes1, [], szStim, 'window', 'testYes');
-		shw.Image(imNo1, [], szStim, 'window', 'testNo');
-	else
-		shw.Image(imPrompt2, [], szStim, 'window', 'test');
-		shw.Image(imYes2, [], szStim, 'window', 'testYes');
-		shw.Image(imNo2, [], szStim, 'window', 'testNo');
-	end
-else % generate a new stimulus for the test
-	testClass = conditional(cue == 1, prompt1Class, prompt2Class);
-	[imTest, imTestYes, imTestNo] = MWPI.Stimulus(testClass, arrSeed(4), level, ...
-		'feedback', true);
-	shw.Image(imTest, [], szStim, 'window', 'test');
-	shw.Image(imTestYes, [], szStim, 'window', 'testYes');
-	shw.Image(imTestNo, [], szStim, 'window', 'testNo');
+% test texture
+offset = MWPI.Param('stim','offset');
+kMatch = sParam.posMatch(kRun, kBlock);
+positions = {[0,-offset], [offset, 0], [0,offset], [-offset, 0]};
+posMatch = positions{kMatch};
+posDistractors = positions(1:4 ~= kMatch);
+
+if cue == 1
+	imMatch = imPromptLeft;
+	imMatchYes = imYesLeft;
+	imMatchNo  = imNoLeft;
+	distractors = distractorsLeft;
+else
+	imMatch = imPromptRight;
+	imMatchYes = imYesRight;
+	imMatchNo  = imNoRight;
+	distractors = distractorsRight;
 end
+
+shw.Image(imMatch, posMatch, szStim, 'window', 'test');
+shw.Image(imMatchYes, posMatch, szStim, 'window', 'testYes');
+shw.Image(imMatchNo, posMatch, szStim, 'window', 'testNo');
+
+% cellfun(@(texture) arrayfun(@(i) ...
+% 	shw.Image(distractors{i}, posDistractors{i}, szStim, 'window', texture), ...
+% 	1:3), {'test', 'testYes', 'testNo'});
+
+% show distractors only on test screen
+arrayfun(@(i) shw.Image(distractors{i}, posDistractors{i}, szStim, 'window', 'test'), 1:3);
 
 end

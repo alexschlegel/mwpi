@@ -44,19 +44,13 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 %----------------------------------------------------------------------%
 	function tNow = DoPrompt(tNow, ~)
 		
-		cX = {	sHandle.prompt1
+		cX = {	sHandle.stim
 				{'Blank','fixation',false}
-				sHandle.prompt2
-				{'Blank','fixation',false}
-				sHandle.cue
-				{'Blank','fixation',false}
+				sHandle.arrow
 			};
 		
-		tShow = [	num2cell(cumsum( [	MWPI.Param('exp','block','prompt','tPrompt1')
-										MWPI.Param('exp','block','prompt','tBlank1')
-										MWPI.Param('exp','block','prompt','tPrompt2')
-										MWPI.Param('exp','block','prompt','tBlank2')
-										MWPI.Param('exp','block','prompt','tCue')]))
+		tShow = [	num2cell(cumsum( [	MWPI.Param('exp','block','prompt','tStim')
+										MWPI.Param('exp','block','prompt','tBlank')]))
 					{@(tNow) deal(false, true)} % make sure it ends ahead of time
 				];
 		
@@ -167,10 +161,16 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 							MWPI.Param('exp','block','test','tBlankPost')
 						]);
 					
-		bMatch = mwpi.sParam.bTestMatch(kRun,kBlock);
+		posMatch = mwpi.sParam.posMatch(kRun,kBlock);
+		
+		dirCorrect = switch2(posMatch, ...
+			1,	'up',		...
+			2,	'right',	...
+			3,	'down',		...
+			4,	'left'		...
+			);
 
-		kCorrect = cell2mat(exp.Input.Get( ...
-			conditional(bMatch,'match','noMatch')));
+		kCorrect = cell2mat(exp.Input.Get(dirCorrect));
 
 		fWait = {	@WaitDefault
 					@(tNow, tNext) WaitTest(kCorrect, tNow, tNext)
@@ -235,13 +235,31 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 		else
 			strFixationFeedback = '';
 		end
+				
+		if mwpi.bPractice
+			strProgressFeedback = ['Trials complete: ' num2str(kBlock) '/' ...
+				num2str(MWPI.Param('practice','run','nBlock'))];
+			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' strProgressFeedback];
+		else
+			strFeedback = ['<color:' strColor '>' strCorrect ' (' ...
+				StringMoney(dRewardTest,'sign',true) ')</color>\n' strFixationFeedback ...
+				'Current total: ' StringMoney(mwpi.reward)];
+		end
 		
-		strFeedback = ['<color:' strColor '>' strCorrect ' (' ...
-			StringMoney(dRewardTest,'sign',true) ')</color>\n' strFixationFeedback ...
-			'Current total: ' StringMoney(mwpi.reward)];
+		% show feedback in an empty area of the screen
+		posMatch = mwpi.sParam.posMatch(kRun,kBlock);
 		
-		exp.Show.Text(strFeedback,[0,MWPI.Param('text','fbOffset')], ...
-			'window', winFeedback);
+		vertOffset = MWPI.Param('text','vertOffset');
+		horzOffset = MWPI.Param('text','horzOffset');
+		
+		posFeedback = switch2(posMatch, ...
+			1,	[0, vertOffset],  ...
+			2,	[-horzOffset, 0], ...
+			3,	[0, -vertOffset], ...
+			4,	[horzOffset, 0]   ...
+			);
+		
+		exp.Show.Text(strFeedback, posFeedback, 'window', winFeedback);
 		
 		exp.Show.Texture(winFeedback);
 		exp.Window.Flip;

@@ -31,6 +31,8 @@ classdef MWPI < PTB.Object
         reward;
 		level;
 		nCorrect; % per block
+		
+		arrow;
     end
     % PUBLIC PROPERTIES-------------------------------------------------%
     
@@ -64,7 +66,7 @@ classdef MWPI < PTB.Object
 				opt.scanner_simulate = true;
 			end
             opt.tr = MWPI.Param('time','tr');
-            opt.input_scheme = 'lr';
+            opt.input_scheme = 'lrud';
             opt.disable_key = false;
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');

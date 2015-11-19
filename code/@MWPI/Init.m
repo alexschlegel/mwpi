@@ -15,11 +15,16 @@ if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
 end
 
 % define keys
-    mwpi.Experiment.Input.Set('response',	MWPI.Param('key','response'));
-    mwpi.Experiment.Input.Set('match',		MWPI.Param('key','match'));
-    mwpi.Experiment.Input.Set('noMatch',	MWPI.Param('key','noMatch'));
-	mwpi.Experiment.Input.Set('shrink',		MWPI.Param('key','shrink'));
-	mwpi.Experiment.Input.Set('grow',		MWPI.Param('key','grow'));
+    mwpi.Experiment.Input.Set('responselr',		MWPI.Param('key','responselr'));
+	mwpi.Experiment.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
+	mwpi.Experiment.Input.Set('shrink',			MWPI.Param('key','shrink'));
+	mwpi.Experiment.Input.Set('grow',			MWPI.Param('key','grow'));
+	
+% read in the arrow image
+bArrow = imread(MWPI.Param('path','arrow'));
+arrArrow = conditional(bArrow, reshape(MWPI.Param('color','back'),1,1,3), ...
+								 reshape(MWPI.Param('color','fore'),1,1,3));
+mwpi.arrow = uint8(arrArrow);							 
 
 %set the reward
 	if ~mwpi.bPractice
@@ -42,7 +47,7 @@ end
 			threshold = mwpi.Experiment.Subject.Get('threshold');
 			
 			if isempty(threshold)
-				warning(['no threshold calculated, using default start level (' num2str(mwpi.level) ')']);
+				warning('no threshold calculated, using default start levels');
 			else
 				mwpi.level = threshold;
 			end
