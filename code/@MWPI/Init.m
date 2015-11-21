@@ -15,7 +15,7 @@ if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
 end
 
 % define keys
-    mwpi.Experiment.Input.Set('responselr',		MWPI.Param('key','responselr'));
+    mwpi.Experiment.Input.Set('responseud',		MWPI.Param('key','responseud'));
 	mwpi.Experiment.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
 	mwpi.Experiment.Input.Set('shrink',			MWPI.Param('key','shrink'));
 	mwpi.Experiment.Input.Set('grow',			MWPI.Param('key','grow'));

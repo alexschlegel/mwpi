@@ -28,11 +28,11 @@ cF = {@DoPrompt
 	 };
 
  
-tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
-						MWPI.Param('exp','block','retention','time')
-						MWPI.Param('exp','block','test','time')
-						MWPI.Param('exp','block','feedback','time');
-					]);
+tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
+									MWPI.Param('exp','block','retention','time')
+									MWPI.Param('exp','block','test','time')]))
+				{@(tNow) deal(false, true)} % make sure it ends ahead of time
+			];
 				
 
 [res.tStart, res.tEnd, res.tSequence, res.bAbort] = ...
@@ -84,10 +84,11 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 		tRestMin = MWPI.Param('fixation', 'tRestMin');
 		tRestMax = MWPI.Param('fixation', 'tRestMax');
 				
-		kShrink    = exp.Input.Get('shrink');
-		kGrow	   = exp.Input.Get('grow');
-		shrinkMult = MWPI.Param('fixation', 'shrinkMult');
-		growMult   = MWPI.Param('fixation', 'growMult');
+		kShrink      = exp.Input.Get('shrink');
+		kGrow	     = exp.Input.Get('grow');
+		strResponse  = 'responseud';
+		shrinkMult   = MWPI.Param('fixation', 'shrinkMult');
+		growMult     = MWPI.Param('fixation', 'growMult');
 		[~,~,~,szva] = exp.Window.Get('main');
 		
 		tTaskStart = randBetween(tPreMin, tPreMax);
@@ -113,7 +114,7 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 							sHandle.retention
 						  };
 			 
-			fWaitFixation = repmat({@(tNow, tNext) WaitTest(kCorrect, tNow, tNext)}, 2,1);
+			fWaitFixation = repmat({@(tNow, tNext) WaitTest(kCorrect, strResponse, tNow, tNext)}, 2,1);
 			 
 			bFlushed = false;
 			
@@ -143,6 +144,9 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 			tTaskStart = tTaskStart + tTask + randBetween(tRestMin, tRestMax);
 		end
 		
+		% make sure serial port gets flushed again
+		bFlushed = false;
+		
 		% show a log message
 		pctCorrect = round(100 * (nYes / (nYes + nNo)));
 		exp.AddLog(['fixations correct: ' num2str(nYes) '/' num2str(nYes + nNo) ...
@@ -151,15 +155,15 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 %----------------------------------------------------------------------%
 	function tNow = DoTest(tNow, ~)
 		
-		cX = {	{'Blank','fixation',false}
+		cX = {	%{'Blank','fixation',false}
 				sHandle.test
-				{'Blank','fixation',false}
+				%{'Blank','fixation',false}
 			};
 		
-		tShow = cumsum([	MWPI.Param('exp','block','test','tBlankPre')
-							MWPI.Param('exp','block','test','tTest')
-							MWPI.Param('exp','block','test','tBlankPost')
-						]);
+		tShow = ...cumsum([	MWPI.Param('exp','block','test','tBlankPre')
+							MWPI.Param('exp','block','test','tTest');
+							%MWPI.Param('exp','block','test','tBlankPost')
+						%]);
 					
 		posMatch = mwpi.sParam.posMatch(kRun,kBlock);
 		
@@ -170,11 +174,12 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 			4,	'left'		...
 			);
 
-		kCorrect = cell2mat(exp.Input.Get(dirCorrect));
+		kCorrect    = cell2mat(exp.Input.Get(dirCorrect));
+		strResponse = 'responselrud';
 
-		fWait = {	@WaitDefault
-					@(tNow, tNext) WaitTest(kCorrect, tNow, tNext)
-					@(tNow, tNext) WaitTest(kCorrect, tNow, tNext)
+		fWait = {	%@WaitDefault
+					@(tNow, tNext) WaitTest(kCorrect, strResponse, tNow, tNext)
+					%@(tNow, tNext) WaitTest(kCorrect, strResponse, tNow, tNext)
 				};
 			
 		res.test = struct;
@@ -235,11 +240,15 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 		else
 			strFixationFeedback = '';
 		end
-				
+		
+		% construct complete feedback string
+		
 		if mwpi.bPractice
 			strProgressFeedback = ['Trials complete: ' num2str(kBlock) '/' ...
 				num2str(MWPI.Param('practice','run','nBlock'))];
-			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' strProgressFeedback];
+			strContinue = 'Press any key to continue.';
+			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' ...
+				strProgressFeedback '\n' strContinue];
 		else
 			strFeedback = ['<color:' strColor '>' strCorrect ' (' ...
 				StringMoney(dRewardTest,'sign',true) ')</color>\n' strFixationFeedback ...
@@ -265,21 +274,25 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 		exp.Window.Flip;
 	end
 %=====================================================================%
-	function [bAbort, bCorrect, kResponse, tResponse] = WaitDefault(tNow,tNext)
-		bAbort = false;
-		bCorrect = [];
-		kResponse = [];
-		tResponse = [];
-		
-		timeMS = MWPI.Param('trTime') * 1000 * (tNext - tNow);
-		endTimeMS = PTB.Now + timeMS;
-		
-		bFlushed = false;
-		
-		exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_LOW, endTimeMS);
-	end
+% 	function [bAbort, bCorrect, kResponse, tResponse] = WaitDefault(tNow,tNext)
+% 		bAbort = false;
+% 		bCorrect = [];
+% 		kResponse = [];
+% 		tResponse = [];
+% 		
+% 		timeMS = MWPI.Param('trTime') * 1000 * (tNext - tNow);
+% 		endTimeMS = PTB.Now + timeMS;
+% 		
+% 		bFlushed = false;
+% 		
+% 		exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_LOW, endTimeMS);
+% 	end
 %--------------------------------------------------------------------%
-	function [bAbort, bCorrect, kResponse, tResponse] = WaitTest(kCorrect, tNow,~)
+	function [bAbort, bCorrect, kResponse, tResponse] = WaitTest(kCorrect, strResponse, tNow,~)
+		% In:
+		%	kCorrect	= matrix of correct key(s)
+		%	strResponse = string representing key set that is considered a response
+		
 		bAbort = false;
         
 		persistent bResponse; % whether a response has been recorded
@@ -297,7 +310,7 @@ tSequence = cumsum([	MWPI.Param('exp','block','prompt','time')
 		
 		% check for a response
 		if ~bResponse
-			[bRespNow,~,~,kButton] = exp.Input.DownOnce('response');
+			[bRespNow,~,~,kButton] = exp.Input.DownOnce(strResponse);
 
 			if bRespNow
 				kResponse = kButton;

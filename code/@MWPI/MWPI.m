@@ -30,7 +30,7 @@ classdef MWPI < PTB.Object
         % updated each block
         reward;
 		level;
-		nCorrect; % per block
+		nCorrect; % per run
 		
 		arrow;
     end
@@ -64,6 +64,9 @@ classdef MWPI < PTB.Object
             opt.context = conditional(opt.practice,'psychophysics','fmri');
 			if opt.debug == 2 || opt.practice
 				opt.scanner_simulate = true;
+			end
+			if opt.practice
+				opt.event_hide = {'scanner'};
 			end
             opt.tr = MWPI.Param('time','tr');
             opt.input_scheme = 'lrud';

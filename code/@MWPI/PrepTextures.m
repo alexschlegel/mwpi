@@ -1,4 +1,4 @@
-function PrepTextures(mwpi, kRun, kBlock, level)
+function PrepTextures(mwpi, sParam, kRun, kBlock, level)
 % PrepTextures - prepare the textures for a single block of mwpi.
 %	They should have already been opened by the calling function.
 %	Textures:	'prompt1':		first of 2 wm prompts
@@ -12,14 +12,13 @@ function PrepTextures(mwpi, kRun, kBlock, level)
 %
 %	Syntax: mwpi.PrepTextures(kRun, kBlock)
 %
-%	In:	kRun:   the current run
+%	In:	sParam: the parameter struct (see MWPI.CalcParams)
+%		kRun:   the current run
 %		kBlock: the current block
 %		level:	a nClass x 1 array of numbers in the range [0, 1]
 %				indicating the difficulty level for each class
 %
 %	Updated: 2015-10-17
-
-sParam = mwpi.sParam;
 
 % verify block and run
 if kBlock > size(sParam.cue, 2)
