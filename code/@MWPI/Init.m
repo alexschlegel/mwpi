@@ -6,19 +6,20 @@ function Init(mwpi)
 % Updated: 2015-08-10
 
 strDomain = conditional(mwpi.bPractice, 'practice','exp');
+exp = mwpi.Experiment;
 
 % hack to get the joystick to work (the triggers don't seem to
 % work)
-if strcmp(mwpi.Experiment.Info.Get('experiment','input'),'joystick')
-	mwpi.Experiment.Input.Set('left','lupper');
-	mwpi.Experiment.Input.Set('right','rupper');
+if strcmp(exp.Info.Get('experiment','input'),'joystick')
+	exp.Input.Set('left','lupper');
+	exp.Input.Set('right','rupper');
 end
 
 % define keys
-    mwpi.Experiment.Input.Set('responseud',		MWPI.Param('key','responseud'));
-	mwpi.Experiment.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
-	mwpi.Experiment.Input.Set('shrink',			MWPI.Param('key','shrink'));
-	mwpi.Experiment.Input.Set('grow',			MWPI.Param('key','grow'));
+    exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
+	exp.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
+	exp.Input.Set('shrink',			MWPI.Param('key','shrink'));
+	exp.Input.Set('grow',			MWPI.Param('key','grow'));
 	
 % read in the arrow image
 bArrow = imread(MWPI.Param('path','arrow'));
@@ -29,22 +30,22 @@ mwpi.arrow = uint8(arrArrow);
 %set the reward
 	if ~mwpi.bPractice
         % check if we're resuming an existing session
-        mwpi.reward = mwpi.Experiment.Info.Get('mwpi','currReward');
+        mwpi.reward = exp.Info.Get('mwpi','currReward');
 
         if isempty(mwpi.reward)
             mwpi.reward	= MWPI.Param('reward','base');
-            mwpi.Experiment.Info.Set('mwpi','currReward',mwpi.reward);
+            exp.Info.Set('mwpi','currReward',mwpi.reward);
         end
 	end
 	
 % set the level
-	mwpi.level = mwpi.Experiment.Info.Get('mwpi','currLevel');
+	mwpi.level = exp.Info.Get('mwpi','currLevel');
 	
 	if isempty(mwpi.level)
 		mwpi.level = MWPI.Param(strDomain, 'startLevel');		
 		
 		if ~mwpi.bPractice
-			threshold = mwpi.Experiment.Subject.Get('threshold');
+			threshold = exp.Subject.Get('threshold');
 			
 			if isempty(threshold)
 				warning('no threshold calculated, using default start levels');
@@ -56,13 +57,23 @@ mwpi.arrow = uint8(arrArrow);
 	
  % get experiment parameters, # of runs and # of blocks per run
 	 % check if we're resuming an existing session
-	 mwpi.sParam = mwpi.Experiment.Info.Get('mwpi','param');
+	 mwpi.sParam = exp.Info.Get('mwpi','param');
 
 	 if isempty(mwpi.sParam)
 		mwpi.sParam = MWPI.CalcParams('practice', mwpi.bPractice);
-		mwpi.Experiment.Info.Set('mwpi','param',mwpi.sParam);
+		exp.Info.Set('mwpi','param',mwpi.sParam);
 	 end
+	 
+% open textures
+mwpi.sTexture.stim			= exp.Window.OpenTexture('stim');
+mwpi.sTexture.arrow			= exp.Window.OpenTexture('arrow');
+mwpi.sTexture.retention		= exp.Window.OpenTexture('retention');
+mwpi.sTexture.retentionLg	= exp.Window.OpenTexture('retentionLg');
+mwpi.sTexture.retentionSm	= exp.Window.OpenTexture('retentionSm');
+mwpi.sTexture.test			= exp.Window.OpenTexture('test');
+mwpi.sTexture.testYes		= exp.Window.OpenTexture('testYes');
+mwpi.sTexture.testNo		= exp.Window.OpenTexture('testNo');
     
-mwpi.Experiment.AddLog('initialized experiment');
+exp.AddLog('initialized experiment');
 
 end

@@ -33,6 +33,7 @@ classdef MWPI < PTB.Object
 		nCorrect; % per run
 		
 		arrow;
+		sTexture;
     end
     % PUBLIC PROPERTIES-------------------------------------------------%
     
@@ -88,6 +89,12 @@ classdef MWPI < PTB.Object
         end
         %-----------------------------------------------------------%
         function End(mwpi,varargin)
+			
+			% close textures			
+			cellfun(@(tName) mwpi.Experiment.Window.CloseTexture(tName), ...
+				fieldnames(mwpi.sTexture));
+			mwpi.Experiment.Window.AddLog('Textures closed.');
+			
             mwpi.Experiment.End(varargin{:});
         end
     end

@@ -15,8 +15,6 @@ global mwpi_g;
 mwpi_g = mwpi;
 global sRun;
 sRun = struct('res',[], 'tStart', [], 'tEnd', [], 'tSequence', [], 'bAbort',[]);
-global sHandle;
-sHandle = [];
 global finished;
 finished = false; %#ok<NASGU>
 global kRun_g;
@@ -40,15 +38,7 @@ exp.Scanner.StartScan(tRun);
 
 	% shared variables
     kBlock = 0;
-    mwpi.nCorrect = 0;
-	
-	% initialize texture handles
-	sHandle.stim		= exp.Window.OpenTexture('stim');
-	sHandle.arrow		= exp.Window.OpenTexture('arrow');
-	sHandle.retention	= exp.Window.OpenTexture('retention'); 
-	sHandle.test		= exp.Window.OpenTexture('test');
-	sHandle.testYes		= exp.Window.OpenTexture('testYes');
-	sHandle.testNo		= exp.Window.OpenTexture('testNo');    
+    mwpi.nCorrect = 0;   
 
     % set up sequence %
     cF = [	repmat({@DoRest; @DoBlock}, mwpi.nBlock,1)
@@ -111,7 +101,7 @@ clear cleanupObj;
         
         exp.AddLog(['block ' num2str(kBlock) ' start']);
         
-        resCur = mwpi.Block(kRun, kBlock, sHandle);
+        resCur = mwpi.Block(kRun, kBlock);
 		
 		resCur.level =  mwpi.level;
         
@@ -145,7 +135,6 @@ end
 
     function cleanupfn
         % cleanup if the run is interrupted / when it ends
-        global sHandle;
         global mwpi_g;
         global sRun;
         global finished;
@@ -155,13 +144,6 @@ end
         
 		ListenChar(0);
 		
-        % close textures
-        if isstruct(sHandle)
-            cellfun(@(tName) exp.Window.CloseTexture(tName), fieldnames(sHandle));
-        end
-        exp.Window.AddLog('Textures closed.');
-
-        
         % save results 
         if ~isempty(sRun.res)
             if ~finished

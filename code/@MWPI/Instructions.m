@@ -35,7 +35,7 @@ mwpi.PrepTextures(sParam, kRun, kBlock, level);
 strStimuli = 'You will see two shapes on the screen.';
 exp.Show.Instructions(strStimuli, 'figure', sHandle.stim);
 
-strArrow = ['Next, they will be replaced by an arrow.\n Memorize the shape that was on ', ...
+strArrow = ['Next, they will be replaced by an arrow.\n Remember the shape that was on ', ...
 			'the side of the screen that the arrow points to.'];
 exp.Show.Instructions(strArrow, 'figure', sHandle.arrow);
 
@@ -43,9 +43,10 @@ strRetention1 = ['For the next 5 seconds, you will see a third shape periodicall
 				 'shrink or grow,\n and then return to its original size.'];
 exp.Show.Instructions(strRetention1, 'figure', sHandle.retention);
 
-strRetention2 = 'Press A when it shrinks and Y when it grows.';
+strRetention2 = ['Press <color:green>A</color> when it shrinks and '...
+					   '<color:yellow>Y</color> when it grows.'];
 fresponse = @() exp.Input.DownOnce('down', false);
-strPrompt = 'Press A to continue.';
+strPrompt = 'Press <color:green>A</color> to continue.';
 shrinkMult = MWPI.Param('fixation', 'shrinkMult');
 [~,~,~,szva] = exp.Window.Get('main');
 hRetentionShrink = exp.Window.OpenTexture('retShrink');
@@ -58,7 +59,7 @@ strRetention3 = ['Pay attention to the shape and respond as quickly as ' ...
 exp.Show.Instructions(strRetention3, 'figure', sHandle.retention);
 
 strTest = ['Next, your memory will be tested: you must press the button\n' ...
-		   'corresponding to the shape you memorized at the beginning.'];
+		   'corresponding to the shape you remembered at the beginning.'];
 	   
 offset = MWPI.Param('text', 'instrOffset');
 exp.Show.Text('<color:blue>X</color>', [-offset, 0], 'window', 'test');

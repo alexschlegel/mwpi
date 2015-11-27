@@ -6,6 +6,8 @@ function PrepTextures(mwpi, sParam, kRun, kBlock, level)
 %				'cue':			a number '1' or '2' on the screen,
 %								cues the subject to remember prompt 1 or 2.								
 %				'retention':	visual stim during retention period
+%				'retentionLg':  retention period stim increased in size
+%				'retentionSm':	retention period stim decreased in size
 %				'test':			wm test after retention
 %				'testYes':		test in color indicating success
 %				'testNo':		test in color indicating failure
@@ -53,25 +55,38 @@ end
 
 % make the stimulus textures
 
-szStim  = MWPI.Param('stim', 'size');
+szStimVA  = MWPI.Param('stim', 'size');
+szStimPX  = round(mwpi.Experiment.Window.va2px(szStimVA));
 offset  = MWPI.Param('stim', 'offset');
 
 shw.Blank('window', 'stim');
 
 lClass = sParam.lClass(kRun, kBlock);
-[imPromptLeft, imYesLeft, imNoLeft, distractorsLeft] = MWPI.Stimulus(lClass, arrSeed(1), level(lClass), ...
+stimLeft = MWPI.Stimulus(lClass, arrSeed(1), level(lClass), szStimPX, ...
 	'feedback', cue == 1, 'distractors', cue == 1);
-shw.Image(imPromptLeft, [-offset, 0], szStim, 'window', 'stim');
+
+shw.Image(stimLeft.base, [-offset, 0], 'window', 'stim');
+
 
 rClass = sParam.rClass(kRun, kBlock);
-[imPromptRight, imYesRight, imNoRight, distractorsRight] = MWPI.Stimulus(rClass, arrSeed(2), level(rClass), ...
+stimRight = MWPI.Stimulus(rClass, arrSeed(2), level(rClass), szStimPX, ...
 	'feedback', cue == 2, 'distractors', cue == 2);
-shw.Image(imPromptRight, [offset, 0], szStim, 'window', 'stim');
+
+shw.Image(stimRight.base, [offset, 0], 'window', 'stim');
+
 
 vClass = sParam.vClass(kRun, kBlock);
-imV = MWPI.Stimulus(vClass, arrSeed(3), level(vClass));
+stimV = MWPI.Stimulus(vClass, arrSeed(3), level(vClass), szStimPX, ...
+	'small_large', true);
+
 shw.Blank('window', 'retention');
-shw.Image(imV, [], szStim, 'window', 'retention');
+shw.Image(stimV.base, 'window', 'retention');
+
+shw.Blank('window', 'retentionLg');
+shw.Image(stimV.large, 'window', 'retentionLg');
+
+shw.Blank('window', 'retentionSm');
+shw.Image(stimV.small, 'window', 'retentionSm');
 
 shw.Blank('window', 'test');
 shw.Blank('window', 'testYes');
@@ -84,27 +99,13 @@ positions = {[0,-offset], [offset, 0], [0,offset], [-offset, 0]};
 posMatch = positions{kMatch};
 posDistractors = positions(1:4 ~= kMatch);
 
-if cue == 1
-	imMatch = imPromptLeft;
-	imMatchYes = imYesLeft;
-	imMatchNo  = imNoLeft;
-	distractors = distractorsLeft;
-else
-	imMatch = imPromptRight;
-	imMatchYes = imYesRight;
-	imMatchNo  = imNoRight;
-	distractors = distractorsRight;
-end
+stimTest = conditional(cue == 1, stimLeft, stimRight);
 
-shw.Image(imMatch, posMatch, szStim, 'window', 'test');
-shw.Image(imMatchYes, posMatch, szStim, 'window', 'testYes');
-shw.Image(imMatchNo, posMatch, szStim, 'window', 'testNo');
-
-% cellfun(@(texture) arrayfun(@(i) ...
-% 	shw.Image(distractors{i}, posDistractors{i}, szStim, 'window', texture), ...
-% 	1:3), {'test', 'testYes', 'testNo'});
+shw.Image(stimTest.base, posMatch, 'window', 'test');
+shw.Image(stimTest.yes,  posMatch, 'window', 'testYes');
+shw.Image(stimTest.no,   posMatch, 'window', 'testNo');
 
 % show distractors only on test screen
-arrayfun(@(i) shw.Image(distractors{i}, posDistractors{i}, szStim, 'window', 'test'), 1:3);
+arrayfun(@(i) shw.Image(stimTest.distractors{i}, posDistractors{i}, 'window', 'test'), 1:3);
 
 end

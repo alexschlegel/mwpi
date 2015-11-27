@@ -51,7 +51,7 @@ arrClass = sParam.wClass(kRun, 1:numel(res));
 lastClass = arrClass(end);
 
 level = res(end).level;
-level(lastClass) = UpdateOne(res(arrClass == lastClass), lastClass, levelMin, levelMax, varargin);
+level(lastClass) = UpdateOne(res(arrClass == lastClass), lastClass, levelMin, levelMax, varargin{:});
 
 end
 

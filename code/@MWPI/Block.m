@@ -1,17 +1,16 @@
-function res = Block(mwpi, kRun, kBlock, sHandle)
+function res = Block(mwpi, kRun, kBlock)
 % Block - do one MWPI block.
 %
-% Syntax: mwpi.Block(kRun, kBlock, sHandle)
+% Syntax: mwpi.Block(kRun, kBlock)
 %
 % In:
 %   kRun - the run number
 %   kBlock - the block number
-%   sHandle - a struct of handles to textures that should be prepared before this function
-%             is called. See PrepTextures for descriptions.
 %
 % Updated: 2015-08-18
 
 exp = mwpi.Experiment;
+sHandle = mwpi.sTexture;
 
 res.bCorrect = [];
 bFlushed = false;
@@ -87,10 +86,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		kShrink      = exp.Input.Get('shrink');
 		kGrow	     = exp.Input.Get('grow');
 		strResponse  = 'responseud';
-		shrinkMult   = MWPI.Param('fixation', 'shrinkMult');
-		growMult     = MWPI.Param('fixation', 'growMult');
-		[~,~,~,szva] = exp.Window.Get('main');
-		
+	
 		tTaskStart = randBetween(tPreMin, tPreMax);
 		sched = exp.Scheduler;
 		
@@ -108,9 +104,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 			% set up fixation task
 			bGrow = randFrom([true, false]);
 			kCorrect = cell2mat(conditional(bGrow, kGrow, kShrink));
-			multiplier = conditional(bGrow, growMult, shrinkMult);			
+			hTask = conditional(bGrow, sHandle.retentionLg, sHandle.retentionSm);			
 			
-			cXFixation = {	{'Texture', sHandle.retention, [], [], multiplier * szva}
+			cXFixation = {	hTask
 							sHandle.retention
 						  };
 			 

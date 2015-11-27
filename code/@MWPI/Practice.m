@@ -16,15 +16,7 @@ exp = mwpi.Experiment;
 ListenChar(2);
 
 % scanner simulation starts
-exp.Scanner.StartScan;
-
-% initialize texture handles
-sHandle.stim		= exp.Window.OpenTexture('stim');
-sHandle.arrow		= exp.Window.OpenTexture('arrow');
-sHandle.retention	= exp.Window.OpenTexture('retention'); 
-sHandle.test		= exp.Window.OpenTexture('test');
-sHandle.testYes		= exp.Window.OpenTexture('testYes');
-sHandle.testNo		= exp.Window.OpenTexture('testNo');    
+exp.Scanner.StartScan; 
 
 mwpi.nCorrect = 0;
 res = [];
@@ -35,7 +27,7 @@ for kBlock = 1:mwpi.nBlock
 	DoRest(PTB.Now,tPreBlock);
 	exp.AddLog(['starting block ' num2str(kBlock)]);
 
-	newRes = mwpi.Block(kRun, kBlock, sHandle);	
+	newRes = mwpi.Block(kRun, kBlock);	
 	newRes.level = mwpi.level;
 
 	if isempty(res)
@@ -62,11 +54,6 @@ exp.Window.Flip;
 
 % enable keyboard
 ListenChar(0);
-
-% cleanup
-% close textures
-cellfun(@(tName) exp.Window.CloseTexture(tName), fieldnames(sHandle));
-exp.Window.AddLog('Textures closed.');
 
 % save results
 sRun.res = res;
