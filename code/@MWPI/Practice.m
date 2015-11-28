@@ -22,6 +22,8 @@ mwpi.nCorrect = 0;
 res = [];
 fUpdateLevel = MWPI.Param('practice','fUpdateLevel');
 
+contOffset = MWPI.Param('text', 'contOffset');
+
 for kBlock = 1:mwpi.nBlock
 
 	DoRest(PTB.Now,tPreBlock);
@@ -29,6 +31,9 @@ for kBlock = 1:mwpi.nBlock
 
 	newRes = mwpi.Block(kRun, kBlock);	
 	newRes.level = mwpi.level;
+	
+	pNew = newRes.pNew;
+	newRes = rmfield(newRes, 'pNew');
 
 	if isempty(res)
 		res = newRes;
@@ -38,6 +43,20 @@ for kBlock = 1:mwpi.nBlock
 	
 	% update level
 	mwpi.level = fUpdateLevel(res, mwpi.sParam, kRun);
+	
+	% pause
+	tPause = MWPI.Param('practice', 'tFbPause');
+	tNow = PTB.Now;
+	while PTB.Now < tNow + tPause
+		exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_HIGH);
+	end
+	
+	% add continue prompt
+	fbTexture = conditional(newRes.bCorrect, 'testYes', 'testNo');
+	strContinue = 'Press any key to continue.';
+	exp.Show.Text(strContinue, [0,contOffset], 'window', fbTexture);
+	exp.Show.Texture(fbTexture);
+	exp.Window.Flip;
 	
 	% wait for a key to be pressed
 	while ~exp.Input.Down('any')

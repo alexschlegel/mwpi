@@ -5,17 +5,49 @@ function Instructions(mwpi)
 %
 % Updated: 2015-11-20
 
-% construct figures
+% text-only explanation
 
 exp = mwpi.Experiment;
 
-sHandle.stim		= exp.Window.OpenTexture('stim');
-sHandle.arrow		= exp.Window.OpenTexture('arrow');
-sHandle.retention	= exp.Window.OpenTexture('retention');
-sHandle.test		= exp.Window.OpenTexture('test');
-sHandle.testYes		= exp.Window.OpenTexture('testYes');
-sHandle.testNo		= exp.Window.OpenTexture('testNo');
+szHeader = num2str(MWPI.Param('text', 'szHeader'));
 
+strPrompt = ['<size:' szHeader '>Instructions:\n</size>' ...
+	'At the start of a trial, you will see two images on the screen. Next, ' ...
+	'they will disappear and an arrow will appear. You must remember the image ' ...
+	'that has just disappeared from the location indicated by the arrow.'];
+exp.Show.Instructions(strPrompt);
+
+secRetention = num2str(MWPI.Param('exp','block','retention','time')*MWPI.Param('trTime'));
+strRetention = ['<size:' szHeader '>Instructions (cont.):\n</size>' ...
+	'Next, you will see a third image in the center of the screen. For the next ' ...
+	secRetention ' seconds, it will periodically grow or shrink, and then quickly return ' ...
+	'to normal size. Each time this happens, quickly press <color:green>A</color> if it shrank ' ...
+	'or <color:yellow>Y</color> if it grew.'];
+exp.Show.Instructions(strRetention);
+
+secTest = num2str(MWPI.Param('exp','block','test','tTest')*MWPI.Param('trTime'));
+strTest = ['<size:' szHeader '>Instructions (cont.):\n</size>' ...
+	'Finally, you will be tested on your memory of the image you remembered ' ...
+	'at the beginning. You will see four shapes, at the top, bottom, left and right '...
+	'of the screen. You will have ' secTest ' seconds to indicate the location of the image ' ...
+	'you remembered with the <color:yellow>Y</color>, <color:green>A</color>, ' ...
+	'<color:blue>X</color>, or <color:red>B</color> key.'];
+exp.Show.Instructions(strTest);
+
+strFeedback = ['<size:' szHeader '>Instructions (cont.):\n</size>' ...
+	'After the test, you will see the correct answer and feedback on your performance. ' ...
+	'When you do the real experiment in the scanner, you will also see the current ' ...
+	'level of your monetary reward, which adjusts according to your performance.'];
+exp.Show.Instructions(strFeedback);
+
+colHint = MWPI.Param('text', 'colHint');
+colHintRGBA = exp.Color.Get(colHint);
+strExample = ['Next, you will do an example trial. The hints in ' ...
+	'<color:' colHint '>light gray</color> are there to guide you and will not ' ...
+	'appear after this trial.'];
+exp.Show.Instructions(strExample);
+
+%--- example run ----%
 % create dummy parameter struct
 sParam.lClass   = 1;
 sParam.rClass   = 3;
@@ -29,53 +61,42 @@ kRun = 1;
 kBlock = 1;
 level = [0.05; 0.05; 0.05; 0.05];
 
-mwpi.PrepTextures(sParam, kRun, kBlock, level);
+seedCuedFig = mwpi.PrepTextures(sParam, kRun, kBlock, level);
+hintSzVA = MWPI.Param('stim','size');
+hintSzPX = round(exp.Window.va2px(hintSzVA));
+hintFig = MWPI.Stimulus(sParam.wClass, seedCuedFig, level(sParam.wClass), hintSzPX, ...
+	'base_color', colHintRGBA(1:3));
+hintFig = hintFig.base;
 
-% instruction sequence
-strStimuli = 'You will see two shapes on the screen.';
-exp.Show.Instructions(strStimuli, 'figure', sHandle.stim);
+hintOffset = MWPI.Param('stim', 'offset');
 
-strArrow = ['Next, they will be replaced by an arrow.\n Remember the shape that was on ', ...
-			'the side of the screen that the arrow points to.'];
-exp.Show.Instructions(strArrow, 'figure', sHandle.arrow);
+hintFigTexture = {'arrow', 'retention', 'retentionLg', 'retentionSm'};
 
-strRetention1 = ['For the next 5 seconds, you will see a third shape periodically ', ...
-				 'shrink or grow,\n and then return to its original size.'];
-exp.Show.Instructions(strRetention1, 'figure', sHandle.retention);
+for kT = 1:numel(hintFigTexture)
+	exp.Show.Text(['<color:' colHint '>Remember</color>'], ...
+		[hintOffset, - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
+	exp.Show.Image(hintFig, [hintOffset, 0], 'window', hintFigTexture{kT}, ...
+		'border', true, 'border_color', colHint);
+end
 
-strRetention2 = ['Press <color:green>A</color> when it shrinks and '...
-					   '<color:yellow>Y</color> when it grows.'];
-fresponse = @() exp.Input.DownOnce('down', false);
-strPrompt = 'Press <color:green>A</color> to continue.';
-shrinkMult = MWPI.Param('fixation', 'shrinkMult');
-[~,~,~,szva] = exp.Window.Get('main');
-hRetentionShrink = exp.Window.OpenTexture('retShrink');
-exp.Show.Texture(sHandle.retention, [], [], szva * shrinkMult, 'window', 'retShrink');
-exp.Show.Instructions(strRetention2, 'figure', hRetentionShrink, ...
-	'prompt', strPrompt, 'fresponse', fresponse);
+% button hints
+exp.Show.Text(['<color:' colHint '>Y</color>'], [0,-hintOffset], 'window', 'retentionLg');
+exp.Show.Text(['<color:' colHint '>A</color>'], [0, hintOffset], 'window', 'retentionSm');
+exp.Show.Text(['<color:' colHint '>B</color>'], [1,0], 'window', 'test');
 
-strRetention3 = ['Pay attention to the shape and respond as quickly as ' ...
-				 'possible when it changes.'];
-exp.Show.Instructions(strRetention3, 'figure', sHandle.retention);
+exp.Scanner.StartScan;
 
-strTest = ['Next, your memory will be tested: you must press the button\n' ...
-		   'corresponding to the shape you remembered at the beginning.'];
-	   
-offset = MWPI.Param('text', 'instrOffset');
-exp.Show.Text('<color:blue>X</color>', [-offset, 0], 'window', 'test');
-exp.Show.Text('<color:yellow>Y</color>', [0, -offset], 'window', 'test');
-exp.Show.Text('<color:red>B</color>', [offset, 0], 'window', 'test');
-exp.Show.Text('<color:green>A</color>', [0, offset], 'window', 'test');
-exp.Show.Instructions(strTest, 'figure', sHandle.test);
+mwpi.Block(1,1, 'sParam', sParam);
 
-strFeedback = 'Finally, you will see feedback and an indicator of your progress.';
-posFeedback = [-MWPI.Param('text','horzOffset'),0];
-fb = '<color:green>Yes!</color>\nTrials complete: 1/1';
-exp.Show.Text(fb, posFeedback, 'window', 'testYes');
-exp.Show.Instructions(strFeedback, 'figure', 'testYes');
+exp.Scanner.StopScan;
+
+% pause
+tPause = 1000 * MWPI.Param('trTime') + MWPI.Param('exp','block','feedback','time');
+tNow = PTB.Now;
+while PTB.Now < tNow + tPause
+	exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_HIGH);
+end
 
 exp.Show.Instructions('Any questions? Ask before starting!', 'blank', true, 'next', 'start');
-
-cellfun(@(tName) exp.Window.CloseTexture(tName), fieldnames(sHandle));
 
 end

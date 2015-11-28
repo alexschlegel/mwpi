@@ -1,10 +1,9 @@
-function PrepTextures(mwpi, sParam, kRun, kBlock, level)
+function seedCuedFig = PrepTextures(mwpi, sParam, kRun, kBlock, level)
 % PrepTextures - prepare the textures for a single block of mwpi.
 %	They should have already been opened by the calling function.
-%	Textures:	'prompt1':		first of 2 wm prompts
-%				'prompt2':		second of 2 wm prompts
-%				'cue':			a number '1' or '2' on the screen,
-%								cues the subject to remember prompt 1 or 2.								
+%	Textures:	'stim':			2 prompts, side by side
+%				'arrow':		an arrow pointing left or right, cuing the
+%								subject to remember one prompt or the other.								
 %				'retention':	visual stim during retention period
 %				'retentionLg':  retention period stim increased in size
 %				'retentionSm':	retention period stim decreased in size
@@ -19,6 +18,9 @@ function PrepTextures(mwpi, sParam, kRun, kBlock, level)
 %		kBlock: the current block
 %		level:	a nClass x 1 array of numbers in the range [0, 1]
 %				indicating the difficulty level for each class
+%
+%	Out: seedCuedFig: the seed used to generate the cued prompt figure
+%					  (i.e. the WM figure)
 %
 %	Updated: 2015-10-17
 
@@ -52,6 +54,8 @@ while ~bSeedsDone
 		bSeedsDone = true;
 	end
 end
+
+seedCuedFig = arrSeed(cue);
 
 % make the stimulus textures
 

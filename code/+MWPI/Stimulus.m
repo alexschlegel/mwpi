@@ -31,6 +31,8 @@ function sStim = Stimulus(class, seed, level, size, varargin)
 %				  stimulus (ratios are specified in MWPI.Param) and return
 %				  in sStim.small and sStim.large.
 %
+%	  base_color: (MWPI.Param('color','fore')) the color of the base image
+%
 % Out:
 %	   sStim:	 A struct containing the base stimulus in sStim.base, and
 %				 any variants in other fields as specified by the options.
@@ -40,7 +42,8 @@ function sStim = Stimulus(class, seed, level, size, varargin)
 opt = ParseArgs(varargin, ...
 	'feedback', false, ...
 	'distractors', false, ...
-	'small_large', false ...
+	'small_large', false, ...
+	'base_color', MWPI.Param('color', 'fore') ...
 	);
 
 if isempty(seed)
@@ -48,7 +51,7 @@ if isempty(seed)
 end
 
 colBack = MWPI.Param('color','back');
-colStim = MWPI.Param('color','fore');
+colStim = opt.base_color;
 colYes  = MWPI.Param('color','yes');
 colNo   = MWPI.Param('color','no');
 

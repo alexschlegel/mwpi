@@ -1,13 +1,18 @@
-function res = Block(mwpi, kRun, kBlock)
+function res = Block(mwpi, kRun, kBlock, varargin)
 % Block - do one MWPI block.
 %
-% Syntax: mwpi.Block(kRun, kBlock)
+% Syntax: mwpi.Block(kRun, kBlock, <options>)
 %
 % In:
 %   kRun - the run number
 %   kBlock - the block number
+%	<options>:
+%		sParam - (mwpi.sParam) alternate parameter struct to use (see
+%				 CalcParams)
 %
 % Updated: 2015-08-18
+
+opt = ParseArgs(varargin, 'sParam', mwpi.sParam);
 
 exp = mwpi.Experiment;
 sHandle = mwpi.sTexture;
@@ -161,7 +166,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 							%MWPI.Param('exp','block','test','tBlankPost')
 						%]);
 					
-		posMatch = mwpi.sParam.posMatch(kRun,kBlock);
+		posMatch = opt.sParam.posMatch(kRun,kBlock);
 		
 		dirCorrect = switch2(posMatch, ...
 			1,	'up',		...
@@ -191,30 +196,28 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		
 		if numel(res.test.bCorrect) > 0
 			res.bCorrect = res.test.bCorrect{1};
-		else
-			res.bCorrect = false; % no response = wrong
 		end
 		
 	end
 %----------------------------------------------------------------------%
 	function tNow = DoFeedback(tNow, ~)
-		% update correct total, reward, show feedback screen	
-		
-		% add a log message
-		mwpi.nCorrect    = mwpi.nCorrect + res.bCorrect;
-		charCorrect  = conditional(res.bCorrect,'y','n');
-		strTally    = [num2str(mwpi.nCorrect) '/' num2str(kBlock)];
-		
-		exp.AddLog(['feedback (' charCorrect ', ' strTally ')']);
+	% update correct total, reward, show feedback screen	
 		
 		% show feedback texture and updated reward
 		strColYes = MWPI.Param('text','colYes');
 		strColNo  = MWPI.Param('text','colNo');
+		
 		if res.bCorrect
 			winFeedback = 'testYes';
 			strCorrect = 'Yes!';
 			strColor = strColYes;
 			dRewardTest = MWPI.Param('reward','rewardPerBlock');
+		elseif isempty(res.bCorrect)
+			res.bCorrect = false;
+			winFeedback = 'testNo';
+			strCorrect = 'Too slow!';
+			strColor = strColNo;
+			dRewardTest = -MWPI.Param('reward','penaltyPerBlock');
 		else
 			winFeedback = 'testNo';
 			strCorrect = 'No!';
@@ -241,10 +244,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		
 		if mwpi.bPractice
 			strProgressFeedback = ['Trials complete: ' num2str(kBlock) '/' ...
-				num2str(MWPI.Param('practice','run','nBlock'))];
-			strContinue = 'Press any key to continue.';
+				num2str(size(opt.sParam.cue, 2))];
 			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' ...
-				strProgressFeedback '\n' strContinue];
+				strProgressFeedback '\n'];
 		else
 			strFeedback = ['<color:' strColor '>' strCorrect ' (' ...
 				StringMoney(dRewardTest,'sign',true) ')</color>\n' strFixationFeedback ...
@@ -252,7 +254,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		end
 		
 		% show feedback in an empty area of the screen
-		posMatch = mwpi.sParam.posMatch(kRun,kBlock);
+		posMatch = opt.sParam.posMatch(kRun,kBlock);
 		
 		vertOffset = MWPI.Param('text','vertOffset');
 		horzOffset = MWPI.Param('text','horzOffset');
@@ -264,26 +266,27 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 			4,	[horzOffset, 0]   ...
 			);
 		
-		exp.Show.Text(strFeedback, posFeedback, 'window', winFeedback);
+		szFeedback = num2str(MWPI.Param('text', 'szFeedback'));
+		pNew = exp.Show.Text(['<size:' szFeedback '>' strFeedback '</size>'], ...
+			posFeedback, 'window', winFeedback);
+		
+		% save position on practice runs for continue prompt
+		if mwpi.bPractice
+			res.pNew = pNew;
+		end
 		
 		exp.Show.Texture(winFeedback);
-		exp.Window.Flip;
+		exp.Window.Flip;		
+		
+		% add a log message
+		mwpi.nCorrect    = mwpi.nCorrect + res.bCorrect;
+		charCorrect  = conditional(res.bCorrect,'y','n');
+		strTally    = [num2str(mwpi.nCorrect) '/' num2str(kBlock)];
+		
+		exp.AddLog(['feedback (' charCorrect ', ' strTally ')']);
 	end
 %=====================================================================%
-% 	function [bAbort, bCorrect, kResponse, tResponse] = WaitDefault(tNow,tNext)
-% 		bAbort = false;
-% 		bCorrect = [];
-% 		kResponse = [];
-% 		tResponse = [];
-% 		
-% 		timeMS = MWPI.Param('trTime') * 1000 * (tNext - tNow);
-% 		endTimeMS = PTB.Now + timeMS;
-% 		
-% 		bFlushed = false;
-% 		
-% 		exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_LOW, endTimeMS);
-% 	end
-%--------------------------------------------------------------------%
+
 	function [bAbort, bCorrect, kResponse, tResponse] = WaitTest(kCorrect, strResponse, tNow,~)
 		% In:
 		%	kCorrect	= matrix of correct key(s)
