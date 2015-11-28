@@ -32,9 +32,6 @@ for kBlock = 1:mwpi.nBlock
 	newRes = mwpi.Block(kRun, kBlock);	
 	newRes.level = mwpi.level;
 	
-	pNew = newRes.pNew;
-	newRes = rmfield(newRes, 'pNew');
-
 	if isempty(res)
 		res = newRes;
 	else

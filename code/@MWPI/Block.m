@@ -267,13 +267,8 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 			);
 		
 		szFeedback = num2str(MWPI.Param('text', 'szFeedback'));
-		pNew = exp.Show.Text(['<size:' szFeedback '>' strFeedback '</size>'], ...
+		exp.Show.Text(['<size:' szFeedback '>' strFeedback '</size>'], ...
 			posFeedback, 'window', winFeedback);
-		
-		% save position on practice runs for continue prompt
-		if mwpi.bPractice
-			res.pNew = pNew;
-		end
 		
 		exp.Show.Texture(winFeedback);
 		exp.Window.Flip;		
