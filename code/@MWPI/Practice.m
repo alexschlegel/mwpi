@@ -8,8 +8,6 @@ function Practice(mwpi, kRun)
 %
 % Updated: 2015-09-03
 
-tPreBlock = MWPI.Param('practice','tPreBlock');
-
 exp = mwpi.Experiment;
 
 % turn on keyboard listening
@@ -23,6 +21,14 @@ res = [];
 fUpdateLevel = MWPI.Param('practice','fUpdateLevel');
 
 contOffset = MWPI.Param('text', 'contOffset');
+
+tPreBlock = MWPI.Param('practice','tPreBlock');
+tPreRun   = MWPI.Param('practice','tPreRun');
+
+tStart = PTB.Now;
+while PTB.Now < tStart + tPreRun
+	exp.Scheduler.Wait;
+end
 
 for kBlock = 1:mwpi.nBlock
 

@@ -48,6 +48,9 @@ strExample = ['Next, you will do an example trial. The hints in ' ...
 exp.Show.Instructions(strExample);
 
 %--- example run ----%
+
+exp.Scanner.StartScan;
+
 % create dummy parameter struct
 sParam.lClass   = 1;
 sParam.rClass   = 3;
@@ -74,8 +77,8 @@ hintFigTexture = {'arrow', 'retention', 'retentionLg', 'retentionSm'};
 
 for kT = 1:numel(hintFigTexture)
 	exp.Show.Text(['<color:' colHint '>Remember</color>'], ...
-		[hintOffset, - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
-	exp.Show.Image(hintFig, [hintOffset, 0], 'window', hintFigTexture{kT}, ...
+		[0,3*hintOffset - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
+	exp.Show.Image(hintFig, [0,3*hintOffset], 'window', hintFigTexture{kT}, ...
 		'border', true, 'border_color', colHint);
 end
 
@@ -83,8 +86,6 @@ end
 exp.Show.Text(['<color:' colHint '>Y</color>'], [0,-hintOffset], 'window', 'retentionLg');
 exp.Show.Text(['<color:' colHint '>A</color>'], [0, hintOffset], 'window', 'retentionSm');
 exp.Show.Text(['<color:' colHint '>B</color>'], [1,0], 'window', 'test');
-
-exp.Scanner.StartScan;
 
 mwpi.Block(1,1, 'sParam', sParam);
 

@@ -66,9 +66,9 @@ classdef MWPI < PTB.Object
 			if opt.debug == 2 || opt.practice
 				opt.scanner_simulate = true;
 			end
-			if opt.practice
-				opt.event_hide = {'scanner'};
-			end
+% 			if opt.practice
+% 				opt.event_hide = {'scanner'};
+% 			end
             opt.tr = MWPI.Param('time','tr');
             opt.input_scheme = 'lrud';
             opt.disable_key = false;
