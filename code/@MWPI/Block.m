@@ -243,8 +243,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		% construct complete feedback string
 		
 		if mwpi.bPractice
+			nBlock = MWPI.Param('practice', 'run', 'nBlock');
 			strProgressFeedback = ['Trials complete: ' num2str(kBlock) '/' ...
-				num2str(size(opt.sParam.cue, 2))];
+				num2str(nBlock)];
 			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' ...
 				strProgressFeedback '\n'];
 		else

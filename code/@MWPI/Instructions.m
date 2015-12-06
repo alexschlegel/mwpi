@@ -83,11 +83,14 @@ for kT = 1:numel(hintFigTexture)
 end
 
 % button hints
-exp.Show.Text(['<color:' colHint '>Y</color>'], [0,-hintOffset], 'window', 'retentionLg');
-exp.Show.Text(['<color:' colHint '>A</color>'], [0, hintOffset], 'window', 'retentionSm');
+exp.Show.Text(['<color:' colHint '>Y</color>'], [0,-.5*hintOffset], 'window', 'retentionLg');
+exp.Show.Text(['<color:' colHint '>A</color>'], [0, .5*hintOffset], 'window', 'retentionSm');
 exp.Show.Text(['<color:' colHint '>B</color>'], [2*hintOffset,0], 'window', 'test');
 
+% run!
+exp.Scheduler.Pause;
 mwpi.Block(1,1, 'sParam', sParam);
+exp.Scheduler.Resume;
 
 exp.Scanner.StopScan;
 

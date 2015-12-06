@@ -39,7 +39,7 @@ mwpi.arrow = uint8(arrArrow);
 	end
 	
 % set the level
-	if ~mwpi.Practice
+	if ~mwpi.bPractice
 		mwpi.level = exp.Info.Get('mwpi','currLevel');
 	
 		if isempty(mwpi.level)
