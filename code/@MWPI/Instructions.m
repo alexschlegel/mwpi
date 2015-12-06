@@ -20,8 +20,7 @@ exp.Show.Instructions(strPrompt);
 secRetention = num2str(MWPI.Param('exp','block','retention','time')*MWPI.Param('trTime'));
 strRetention = ['<size:' szHeader '>Instructions (cont.):\n</size>' ...
 	'Next, you will see a third image in the center of the screen. For the next ' ...
-	secRetention ' seconds, it will periodically grow or shrink, and then quickly return ' ...
-	'to normal size. Each time this happens, quickly press <color:green>A</color> if it shrank ' ...
+	secRetention ' seconds, it will periodically grow or shrink momentarily. Each time this happens, quickly press <color:green>A</color> if it shrank ' ...
 	'or <color:yellow>Y</color> if it grew.'];
 exp.Show.Instructions(strRetention);
 
@@ -62,12 +61,13 @@ sParam.posMatch = 2;
 
 kRun = 1;
 kBlock = 1;
-level = [0.05; 0.05; 0.05; 0.05];
+d = 0.05;
+arrAbility = [0.05; 0.05; 0.05; 0.05];
 
-seedCuedFig = mwpi.PrepTextures(sParam, kRun, kBlock, level);
+seedCuedFig = mwpi.PrepTextures(sParam, kRun, kBlock, d, arrAbility);
 hintSzVA = MWPI.Param('stim','size');
 hintSzPX = round(exp.Window.va2px(hintSzVA));
-hintFig = MWPI.Stimulus(sParam.wClass, seedCuedFig, level(sParam.wClass), hintSzPX, ...
+hintFig = MWPI.Stimulus(sParam.wClass, seedCuedFig, d, hintSzPX, ...
 	'base_color', colHintRGBA(1:3));
 hintFig = hintFig.base;
 
@@ -77,15 +77,15 @@ hintFigTexture = {'arrow', 'retention', 'retentionLg', 'retentionSm'};
 
 for kT = 1:numel(hintFigTexture)
 	exp.Show.Text(['<color:' colHint '>Remember</color>'], ...
-		[0,3*hintOffset - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
-	exp.Show.Image(hintFig, [0,3*hintOffset], 'window', hintFigTexture{kT}, ...
+		[0,1.5*hintOffset - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
+	exp.Show.Image(hintFig, [0,1.5*hintOffset], 'window', hintFigTexture{kT}, ...
 		'border', true, 'border_color', colHint);
 end
 
 % button hints
 exp.Show.Text(['<color:' colHint '>Y</color>'], [0,-hintOffset], 'window', 'retentionLg');
 exp.Show.Text(['<color:' colHint '>A</color>'], [0, hintOffset], 'window', 'retentionSm');
-exp.Show.Text(['<color:' colHint '>B</color>'], [1,0], 'window', 'test');
+exp.Show.Text(['<color:' colHint '>B</color>'], [2*hintOffset,0], 'window', 'test');
 
 mwpi.Block(1,1, 'sParam', sParam);
 

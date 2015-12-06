@@ -39,16 +39,16 @@ mwpi.arrow = uint8(arrArrow);
 	end
 	
 % set the level
-	mwpi.level = exp.Info.Get('mwpi','currLevel');
+	if ~mwpi.Practice
+		mwpi.level = exp.Info.Get('mwpi','currLevel');
 	
-	if isempty(mwpi.level)
-		mwpi.level = MWPI.Param(strDomain, 'startLevel');		
+		if isempty(mwpi.level)
+			mwpi.level = MWPI.Param(strDomain, 'startLevel');		
 		
-		if ~mwpi.bPractice
-			threshold = exp.Subject.Get('threshold');
+			threshold = exp.Subject.Get('ability');
 			
 			if isempty(threshold)
-				warning('no threshold calculated, using default start levels');
+				warning('no threshold ability calculated, using default start levels');
 			else
 				mwpi.level = threshold;
 			end
@@ -56,6 +56,7 @@ mwpi.arrow = uint8(arrArrow);
 	end
 	
  % get experiment parameters, # of runs and # of blocks per run
+ if ~mwpi.bPractice % otherwise they will be generated on a per-trial basis
 	 % check if we're resuming an existing session
 	 mwpi.sParam = exp.Info.Get('mwpi','param');
 
@@ -63,6 +64,9 @@ mwpi.arrow = uint8(arrArrow);
 		mwpi.sParam = MWPI.CalcParams('practice', mwpi.bPractice);
 		exp.Info.Set('mwpi','param',mwpi.sParam);
 	 end
+ else
+	 mwpi.sParam = [];
+ end
 	 
 % open textures
 mwpi.sTexture.stim			= exp.Window.OpenTexture('stim');

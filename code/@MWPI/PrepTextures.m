@@ -1,4 +1,4 @@
-function seedCuedFig = PrepTextures(mwpi, sParam, kRun, kBlock, level)
+function seedCuedFig = PrepTextures(mwpi, sParam, kRun, kBlock, d, arrAbility)
 % PrepTextures - prepare the textures for a single block of mwpi.
 %	They should have already been opened by the calling function.
 %	Textures:	'stim':			2 prompts, side by side
@@ -13,11 +13,13 @@ function seedCuedFig = PrepTextures(mwpi, sParam, kRun, kBlock, level)
 %
 %	Syntax: mwpi.PrepTextures(kRun, kBlock)
 %
-%	In:	sParam: the parameter struct (see MWPI.CalcParams)
-%		kRun:   the current run
-%		kBlock: the current block
-%		level:	a nClass x 1 array of numbers in the range [0, 1]
-%				indicating the difficulty level for each class
+%	In:	sParam:		the parameter struct (see MWPI.CalcParams)
+%		kRun:		the current run
+%		kBlock:		the current block
+%		d:			the difficulty of the wm / test stimulus for this block
+%		arrAbility:	a nClass x 1 array of ability estimates in the range [0, 1]
+%					that determin the difficulty level for each class for
+%					stimuli other than the wm / test stimulus
 %
 %	Out: seedCuedFig: the seed used to generate the cued prompt figure
 %					  (i.e. the WM figure)
@@ -31,8 +33,8 @@ elseif kRun > size(sParam.cue, 1)
 	error('Run out of range');
 end
 
-shw = mwpi.Experiment.Show;
-cue    = sParam.cue(kRun, kBlock);
+shw	 = mwpi.Experiment.Show;
+cue  = sParam.cue(kRun, kBlock);
 
 % make the arrow
 
@@ -66,21 +68,23 @@ offset  = MWPI.Param('stim', 'offset');
 shw.Blank('window', 'stim');
 
 lClass = sParam.lClass(kRun, kBlock);
-stimLeft = MWPI.Stimulus(lClass, arrSeed(1), level(lClass), szStimPX, ...
+lLevel = conditional(cue == 1, d, arrAbility(lClass));
+stimLeft = MWPI.Stimulus(lClass, arrSeed(1), lLevel, szStimPX, ...
 	'feedback', cue == 1, 'distractors', cue == 1);
 
 shw.Image(stimLeft.base, [-offset, 0], 'window', 'stim');
 
 
 rClass = sParam.rClass(kRun, kBlock);
-stimRight = MWPI.Stimulus(rClass, arrSeed(2), level(rClass), szStimPX, ...
+rLevel = conditional(cue == 2, d, arrAbility(rClass));
+stimRight = MWPI.Stimulus(rClass, arrSeed(2), rLevel, szStimPX, ...
 	'feedback', cue == 2, 'distractors', cue == 2);
 
 shw.Image(stimRight.base, [offset, 0], 'window', 'stim');
 
 
 vClass = sParam.vClass(kRun, kBlock);
-stimV = MWPI.Stimulus(vClass, arrSeed(3), level(vClass), szStimPX, ...
+stimV = MWPI.Stimulus(vClass, arrSeed(3), arrAbility(vClass), szStimPX, ...
 	'small_large', true);
 
 shw.Blank('window', 'retention');

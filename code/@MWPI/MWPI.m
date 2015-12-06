@@ -43,7 +43,16 @@ classdef MWPI < PTB.Object
     end
     % PRIVATE PROPERTIES------------------------------------------------%
     
-    % PUBLIC METHODS----------------------------------------------------%
+    % STATIC METHODS----------------------------------------------------%
+	methods (Static)
+		s			= CalcParams(varargin)
+		threshold	= CalcThreshold(res, sParam, kRun)
+		p			= Param(varargin)
+		level		= Stairstep(res, sParam, kRun, levelMin, levelMax, varargin)
+		sStim		= Stimulus(class, seed, level, size, varargin)
+	end
+	
+	% INSTANCE METHODS-------------------------------------------------%
     methods
         function mwpi = MWPI(varargin)
             mwpi = mwpi@PTB.Object([],'mwpi');
@@ -66,9 +75,9 @@ classdef MWPI < PTB.Object
 			if opt.debug == 2 || opt.practice
 				opt.scanner_simulate = true;
 			end
-% 			if opt.practice
-% 				opt.event_hide = {'scanner'};
-% 			end
+ 			if opt.practice
+ 				opt.event_hide = {'scanner'};
+ 			end
             opt.tr = MWPI.Param('time','tr');
             opt.input_scheme = 'lrud';
             opt.disable_key = false;

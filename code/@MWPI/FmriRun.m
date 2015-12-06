@@ -55,7 +55,10 @@ exp.Scanner.StartScan(tRun);
 	
 	fUpdateLevel = MWPI.Param('exp','fUpdateLevel');
 	
-								
+	
+	% pause the scheduler
+	exp.Scheduler.Pause;
+	
 	% go!
     
 	[sRun.tStart, sRun.tEnd, sRun.tSequence, sRun.bAbort] = ...
@@ -64,6 +67,8 @@ exp.Scanner.StartScan(tRun);
 		'tbase','absolute', ...
 		'tunit','tr'		...
 		);
+	
+	exp.Scheduler.Resume;
 	
 	% scanner ends
 	exp.Scanner.StopScan;
