@@ -26,20 +26,16 @@ tPreBlock	= MWPI.Param('practice','tPreBlock');
 tPreRun		= MWPI.Param('practice','tPreRun');
 indClass	= MWPI.Param('stim', 'class');
 curve		= MWPI.Param('curve');
-accel		= MWPI.Param('practice', 'acceleration');
-sticky		= MWPI.Param('practice', 'stickiness');
 estimate	= MWPI.Param('practice', 'startLevel');
 minPerClass = MWPI.Param('practice', 'nBlockPerClass');
 maxPerClass = MWPI.Param('practice', 'nBlockPerClass');
 
 % initialize assessment object
-assess = subject.assess.stairstep(repmat({@OneBlock}, size(indClass)), ...
+assess = subject.assess(repmat({@OneBlock}, size(indClass)), ...
 	'chance',		curve.chancePerformance,					...
 	'estimate',		estimate,									...
 	'target',		curve.thresholdPerformance,					...
-	'd',			(curve.xmin : curve.xstep : curve.xmax),	...
-	'acceleration',	accel,										...
-	'stickiness',	sticky										...
+	'd',			(curve.xmin : curve.xstep : curve.xmax)		...
 	);
 
 % wait (is this necessary?)
@@ -82,8 +78,8 @@ exp.Info.Set('mwpi','assessment', assess);
 exp.Info.Set('mwpi','param', mwpi.sParam);
 exp.Info.AddLog('Results saved.');
 
-exp.Subject.Set('ability', assess.ability);
-exp.Subject.AddLog('Threshold ability saved to subject info.');
+exp.Subject.Set('assessment', assess);
+exp.Subject.AddLog('Ability assessment saved to subject info.');
 
 %---------------------------------------------------------------------%
 	function bCorrect = OneBlock(d, sTaskParam)

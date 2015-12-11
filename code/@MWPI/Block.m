@@ -18,6 +18,10 @@ exp = mwpi.Experiment;
 sHandle = mwpi.sTexture;
 
 res.bCorrect = [];
+res.wClass = mwpi.sParam.wClass(kRun, kBlock);
+res.vClass = mwpi.sParam.vClass(kRun, kBlock);
+res.dClass = mwpi.sParam.dClass(kRun, kBlock);
+
 bFlushed = false;
 % for fixation tasks:
 nYes = 0;

@@ -51,10 +51,7 @@ exp.Scanner.StartScan(tRun);
       
     tSequence = cumsum([ repmat([trRest; trBlock], mwpi.nBlock, 1)
 						 trPost
-                         ]) + 1;
-	
-	fUpdateLevel = MWPI.Param('exp','fUpdateLevel');
-	
+                         ]) + 1;	
 	
 	% pause the scheduler
 	exp.Scheduler.Pause;
@@ -90,14 +87,21 @@ clear cleanupObj;
         exp.Show.Blank;       
         exp.Window.Flip;        
 		
-		kBlock = kBlock + 1;
-		
-		if kBlock > 1
-			mwpi.level = fUpdateLevel(sRun.res, mwpi.sParam, kRun);
+		% report the result of the last probe to difficultymatch
+		if kBlock > 0
+			UpdateDM;
 		end
 		
-        mwpi.PrepTextures(mwpi.sParam, kRun, kBlock, mwpi.level);
-        
+		kBlock = kBlock + 1;
+		
+		% update currD with difficulty for next probe
+		kTask = mwpi.sParam.wClass(kRun, kBlock);
+		mwpi.currD(kTask) = mwpi.dm.GetNextProbe(kTask);
+		d = mwpi.currD(kTask);
+		
+		% prepare the next probe		
+		mwpi.PrepTextures(mwpi.sParam, kRun, kBlock, d, mwpi.currD);
+			
         exp.Scheduler.Wait;
 	end
 %---------------------------------------------------------------------%
@@ -108,7 +112,7 @@ clear cleanupObj;
         
         resCur = mwpi.Block(kRun, kBlock);
 		
-		resCur.level =  mwpi.level;
+		resCur.currD =  mwpi.currD;
         
         if isempty(sRun.res)
             sRun.res = resCur;
@@ -124,8 +128,8 @@ clear cleanupObj;
 		exp.Show.Blank('fixation',false);
 		exp.Window.Flip;
 		
-		mwpi.level = fUpdateLevel(sRun.res, mwpi.sParam, kRun);
-
+		UpdateDM;
+		
 		% wait for a second
 		pause(1);
 		
@@ -134,6 +138,15 @@ clear cleanupObj;
 		exp.Window.Flip;
 		
 		exp.Scheduler.Wait;
+	end
+%-------------------------------------------------------------------%
+	function UpdateDM
+		% update the difficultymatch object with results from the last
+		% probe
+		
+		resLast = sRun.res(end);
+		kTaskLast = mwpi.sParam.wClass(kRun, kBlock);
+		mwpi.dm.AppendProbe(kTaskLast, mwpi.currD(kTaskLast), resLast.bCorrect);
 	end
 end
 % ==================== Local Functions =============================%
@@ -166,7 +179,8 @@ end
 					sRuns(kRun_g) = sRun;   
 				end
                 exp.Info.Set('mwpi','run', sRuns);
-				exp.Info.Set('mwpi','currLevel',mwpi_g.level);
+				exp.Info.Set('mwpi','dm',mwpi_g.dm);
+				exp.Info.Set('mwpi','currD', mwpi_g.currD);
 				exp.Info.Set('mwpi','currReward',mwpi_g.reward);
                 exp.Info.AddLog('Results saved.');
 				

@@ -5,15 +5,7 @@ function Init(mwpi)
 %
 % Updated: 2015-08-10
 
-strDomain = conditional(mwpi.bPractice, 'practice','exp');
 exp = mwpi.Experiment;
-
-% hack to get the joystick to work (the triggers don't seem to
-% work)
-if strcmp(exp.Info.Get('experiment','input'),'joystick')
-	exp.Input.Set('left','lupper');
-	exp.Input.Set('right','rupper');
-end
 
 % define keys
     exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
@@ -27,41 +19,52 @@ arrArrow = conditional(bArrow, reshape(MWPI.Param('color','back'),1,1,3), ...
 								 reshape(MWPI.Param('color','fore'),1,1,3));
 mwpi.arrow = uint8(arrArrow);							 
 
-%set the reward
-	if ~mwpi.bPractice
-        % check if we're resuming an existing session
-        mwpi.reward = exp.Info.Get('mwpi','currReward');
-
-        if isempty(mwpi.reward)
-            mwpi.reward	= MWPI.Param('reward','base');
-            exp.Info.Set('mwpi','currReward',mwpi.reward);
-        end
+%set the reward (fMRI only)
+if ~mwpi.bPractice
+	% check if we're resuming an existing session
+	mwpi.reward = exp.Info.Get('mwpi','currReward');
+	
+	if isempty(mwpi.reward)
+		mwpi.reward	= MWPI.Param('reward','base');
+		exp.Info.Set('mwpi','currReward',mwpi.reward);
 	end
+end
 	
-% set the level
-	if ~mwpi.bPractice
-		mwpi.level = exp.Info.Get('mwpi','currLevel');
+% initialize difficultymatch and currD (fMRI only)
+if ~mwpi.bPractice
 	
-		if isempty(mwpi.level)
-			mwpi.level = MWPI.Param(strDomain, 'startLevel');		
+	% saved from interrupted session?
+	mwpi.dm		  = exp.Info.Get('mwpi','dm');
+	mwpi.currD    = exp.Info.Get('mwpi', 'currD');
+	
+	if isempty(mwpi.dm)
 		
-			threshold = exp.Subject.Get('ability');
-			
-			if isempty(threshold)
-				warning('no threshold ability calculated, using default start levels');
-			else
-				mwpi.level = threshold;
-			end
+		n = MWPI.Param('exp', 'nBlockPerClass');
+		assess = exp.Subject.Get('assessment');
+		
+		if isempty(assess)
+			warning('no threshold ability calculated, using default start levels');
+			assess = MWPI.Param('exp', 'startLevel');
+			mwpi.currD = assess;
+		else
+			mwpi.currD = assess.ability;
 		end
+		
+		target = MWPI.Param('curve', 'thresholdPerformance');
+		mwpi.dm = subject.difficultymatch(n, ...
+			'assessment',	assess,	...
+			'target',		target	...
+			);
 	end
+end
 	
- % get experiment parameters, # of runs and # of blocks per run
- if ~mwpi.bPractice % otherwise they will be generated on a per-trial basis
+ % generate block-specific parameters (fMRI only)
+ if ~mwpi.bPractice
 	 % check if we're resuming an existing session
 	 mwpi.sParam = exp.Info.Get('mwpi','param');
 
 	 if isempty(mwpi.sParam)
-		mwpi.sParam = MWPI.CalcParams('practice', mwpi.bPractice);
+		mwpi.sParam = MWPI.CalcParams('practice', false);
 		exp.Info.Set('mwpi','param',mwpi.sParam);
 	 end
  else

@@ -21,17 +21,22 @@ classdef MWPI < PTB.Object
 
     % PUBLIC PROPERTIES-------------------------------------------------%
     properties
+		% objects
         Experiment;
+		dm;		% subject.difficultymatch object, used only for fMRI runs
+		
+		% parameters
 		nRun;
 		nBlock;  % per run
         sParam;
         bPractice;
                 
         % updated each block
-        reward;
-		level;
-		nCorrect; % per run
+        reward;	   % (only for fMRI)
+		currD;	   % (only for fMRI - current difficulty to show stimuli, updates with each new d coming from dm)
+		nCorrect;  % per run
 		
+		% visuals
 		arrow;
 		sTexture;
     end
