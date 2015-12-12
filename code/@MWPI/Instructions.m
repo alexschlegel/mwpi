@@ -5,6 +5,8 @@ function Instructions(mwpi)
 %
 % Updated: 2015-11-20
 
+ListenChar(2);
+
 % text-only explanation
 
 exp = mwpi.Experiment;
@@ -20,8 +22,9 @@ exp.Show.Instructions(strPrompt);
 secRetention = num2str(MWPI.Param('exp','block','retention','time')*MWPI.Param('trTime'));
 strRetention = ['<size:' szHeader '>Instructions (cont.):\n</size>' ...
 	'Next, you will see a third image in the center of the screen. For the next ' ...
-	secRetention ' seconds, it will periodically grow or shrink momentarily. Each time this happens, quickly press <color:green>A</color> if it shrank ' ...
-	'or <color:yellow>Y</color> if it grew.'];
+	secRetention ' seconds, it will periodically grow or shrink momentarily. '...
+	'Each time this happens, quickly press <color:yellow>Y</color> if it grew ' ...
+	'or <color:green>A</color> if it shrank.'];
 exp.Show.Instructions(strRetention);
 
 secTest = num2str(MWPI.Param('exp','block','test','tTest')*MWPI.Param('trTime'));
@@ -41,8 +44,8 @@ exp.Show.Instructions(strFeedback);
 
 colHint = MWPI.Param('text', 'colHint');
 colHintRGBA = exp.Color.Get(colHint);
-strExample = ['Next, you will do an example trial. The hints in ' ...
-	'<color:' colHint '>light gray</color> are there to guide you and will not ' ...
+strExample = ['Next, you will do an example trial.\n The hints in ' ...
+	'<color:' colHint '>' colHint '</color> are there to guide you and will not ' ...
 	'appear after this trial.'];
 exp.Show.Instructions(strExample);
 
@@ -73,29 +76,32 @@ hintFig = hintFig.base;
 
 hintOffset = MWPI.Param('stim', 'offset');
 
-hintFigTexture = {'arrow', 'retention', 'retentionLg', 'retentionSm'};
+hintFigTexture = {'arrow', 'retention', 'retentionLg', 'retentionSm', 'test'};
 
 for kT = 1:numel(hintFigTexture)
 	exp.Show.Text(['<color:' colHint '>Remember</color>'], ...
-		[0,1.5*hintOffset - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
-	exp.Show.Image(hintFig, [0,1.5*hintOffset], 'window', hintFigTexture{kT}, ...
+		[1.5*hintOffset,1.5*hintOffset - 0.6 * hintSzVA], 'window', hintFigTexture{kT});
+	exp.Show.Image(hintFig, [1.5*hintOffset,1.5*hintOffset], 'window', hintFigTexture{kT}, ...
 		'border', true, 'border_color', colHint);
 end
 
 % button hints
-exp.Show.Text(['<color:' colHint '>Y</color>'], [0,-.5*hintOffset], 'window', 'retentionLg');
-exp.Show.Text(['<color:' colHint '>A</color>'], [0, .5*hintOffset], 'window', 'retentionSm');
-exp.Show.Text(['<color:' colHint '>B</color>'], [2*hintOffset,0], 'window', 'test');
+exp.Show.Text(['<color:' colHint '><size:1.5>Y</size></color>'], [0,-hintOffset], 'window', 'retentionLg');
+exp.Show.Text(['<color:' colHint '><size:1.5>A</size></color>'], [0, hintOffset], 'window', 'retentionSm');
+exp.Show.Text(['<color:' colHint '><size:1.5>B</size></color>'], [2*hintOffset,0], 'window', 'test');
 
 % run!
 exp.Scheduler.Pause;
-mwpi.Block(1,1, 'sParam', sParam);
+mwpi.nCorrect = 0;
+res = mwpi.Block(1,1, 'sParam', sParam);
+res.tSequence
+res.prompt.tShow
 exp.Scheduler.Resume;
 
 exp.Scanner.StopScan;
 
 % pause
-tPause = 1000 * MWPI.Param('trTime') + MWPI.Param('exp','block','feedback','time');
+tPause = 1000 * MWPI.Param('trTime') * MWPI.Param('exp','block','feedback','time');
 tNow = PTB.Now;
 while PTB.Now < tNow + tPause
 	exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_HIGH);

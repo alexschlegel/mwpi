@@ -4,7 +4,7 @@ function s = CalcParams(varargin)
 % Description: Calculate and save parameters for all runs of an mwpi
 % experiment (either normal or practice).
 %
-% Syntax: MWPI.CalcParams([options]);
+% Syntax: s = MWPI.CalcParams([options]);
 %
 % In:
 %   <options>:
@@ -33,18 +33,19 @@ function s = CalcParams(varargin)
 opt = ParseArgs(varargin, 'practice', false);
 
 % conditions
-arrClass = MWPI.Param('stim','class');
+arrClass     = MWPI.Param('stim','class');
 arrClassComb = MWPI.Param('stim','classComb');
 
 % repetitions
 strDomain = conditional(opt.practice, 'practice', 'exp');
 nRun	 =  MWPI.Param(strDomain, 'nRun');
-nRepComb =  MWPI.Param(strDomain, 'run','nCondRep');
 nBlock   =  MWPI.Param(strDomain, 'run','nBlock');
+nRepComb =  unless(MWPI.Param(strDomain, 'run','nCondRep'), ceil(nBlock / numel(arrClassComb)));
 nRepClass = nBlock/numel(arrClass);
 
 % cued and retention period classes
 indClassComb = blockdesign(1:numel(arrClassComb),nRepComb,nRun);
+indClassComb = indClassComb(:,1:nBlock);
 
 s.wClass = arrayfun(@(ind) arrClassComb{ind}(1), indClassComb);
 s.vClass = arrayfun(@(ind) arrClassComb{ind}(2), indClassComb);

@@ -16,14 +16,16 @@ ListenChar(2);
 % scanner simulation starts
 exp.Scanner.StartScan; 
 
+% initialize param struct to correct size
+mwpi.sParam = MWPI.CalcParams('practice', true);
+mwpi.sParam = structfun(@(f) f*0, mwpi.sParam, 'uni', false);
+
 mwpi.nCorrect = 0;
-mwpi.sParam = [];
 res = [];
 
 % get some params
 contOffset	= MWPI.Param('text', 'contOffset');
 tPreBlock	= MWPI.Param('practice','tPreBlock');
-tPreRun		= MWPI.Param('practice','tPreRun');
 indClass	= MWPI.Param('stim', 'class');
 curve		= MWPI.Param('curve');
 estimate	= MWPI.Param('practice', 'startLevel');
@@ -37,12 +39,6 @@ assess = subject.assess(repmat({@OneBlock}, size(indClass)), ...
 	'target',		curve.thresholdPerformance,					...
 	'd',			(curve.xmin : curve.xstep : curve.xmax)		...
 	);
-
-% wait (is this necessary?)
-tStart = PTB.Now;
-while PTB.Now < tStart + tPreRun
-	exp.Scheduler.Wait;
-end
 
 % pause the scheduler
 exp.Scheduler.Pause;
@@ -58,7 +54,7 @@ assess.Run(...
 exp.Scheduler.Resume;
 exp.Scanner.StopScan;
 exp.AddLog('Training run complete');
-exp.Show.Text('Practice Finished!\nPlease wait for experimenter.');
+exp.Show.Text('Practice Finished!\nPlease wait for the experimenter.');
 exp.Window.Flip;
 
 % enable keyboard
@@ -147,7 +143,7 @@ exp.Subject.AddLog('Ability assessment saved to subject info.');
 		end
 	end
 %---------------------------------------------------------------------%
-	function sTaskParam = GenParamStruct(kTask, ~, ~)
+	function sTaskParam = GenParamStruct(kTask, ~, kProbeTotal)
 		% generate a parameter struct for a random block of type kTask
 		% (param callback function for subject.assess/Run)
 
@@ -160,12 +156,11 @@ exp.Subject.AddLog('Ability assessment saved to subject info.');
 
 		sTaskParam.lClass = conditional(sTaskParam.cue == 1, sTaskParam.wClass, sTaskParam.dClass);
 		sTaskParam.rClass = conditional(sTaskParam.cue == 2, sTaskParam.wClass, sTaskParam.dClass);
-
+		
 		% update cumulative record of parameters
-		if isempty(mwpi.sParam)
-			mwpi.sParam = sTaskParam;
-		else
-			mwpi.sParam = structfun2(@horzcat, mwpi.sParam, sTaskParam);
+		cParam = fieldnames(mwpi.sParam);
+		for i = 1:numel(cParam)
+			mwpi.sParam.(cParam{i})(kProbeTotal) = sTaskParam.(cParam{i});
 		end
 	end
 end

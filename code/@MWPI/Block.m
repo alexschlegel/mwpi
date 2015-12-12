@@ -18,9 +18,9 @@ exp = mwpi.Experiment;
 sHandle = mwpi.sTexture;
 
 res.bCorrect = [];
-res.wClass = mwpi.sParam.wClass(kRun, kBlock);
-res.vClass = mwpi.sParam.vClass(kRun, kBlock);
-res.dClass = mwpi.sParam.dClass(kRun, kBlock);
+res.wClass = opt.sParam.wClass(kRun, kBlock);
+res.vClass = opt.sParam.vClass(kRun, kBlock);
+res.dClass = opt.sParam.dClass(kRun, kBlock);
 
 bFlushed = false;
 % for fixation tasks:
@@ -42,7 +42,11 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 				{@(tNow) deal(false, true)} % make sure it ends ahead of time
 			];
 				
-
+% ensure the scannner has started
+while exp.Scanner.TR == 0
+	exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_CRITICAL);
+end
+		
 [res.tStart, res.tEnd, res.tSequence, res.bAbort] = ...
 	exp.Sequence.Linear(cF, tSequence, ...
 	'tbase',	'sequence', ...
@@ -50,7 +54,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 	);
 
 %----------------------------------------------------------------------%
-	function tNow = DoPrompt(tNow, ~)
+	function tAbs = DoPrompt(~, ~)
+		
+		tAbs = exp.Scanner.TR;
 		
 		cX = {	sHandle.stim
 				{'Blank','fixation',false}
@@ -72,7 +78,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 			);
 	end
 %----------------------------------------------------------------------%
-	function tNow = DoRetention(tNow, tNext)
+	function tAbs = DoRetention(tNow, tNext)
+		
+		tAbs = exp.Scanner.TR;
 		
 		% define some time functions
 		tStartAbs = exp.Scanner.TR;
@@ -158,7 +166,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 			' (' num2str(pctCorrect) '%)']);
 	end
 %----------------------------------------------------------------------%
-	function tNow = DoTest(tNow, ~)
+	function tAbs = DoTest(~, ~)
+		
+		tAbs = exp.Scanner.TR;
 		
 		cX = {	%{'Blank','fixation',false}
 				sHandle.test
@@ -204,7 +214,10 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		
 	end
 %----------------------------------------------------------------------%
-	function tNow = DoFeedback(tNow, ~)
+	function tAbs = DoFeedback(~, ~)
+		
+		tAbs = exp.Scanner.TR;
+		
 	% update correct total, reward, show feedback screen	
 		
 		% show feedback texture and updated reward
@@ -246,16 +259,16 @@ tSequence = [	num2cell(cumsum([	MWPI.Param('exp','block','prompt','time')
 		
 		% construct complete feedback string
 		
+		strProgressFeedback = ['Trials complete: ' num2str(kBlock) '/' ...
+				num2str(size(opt.sParam.cue, 2))];
+		
 		if mwpi.bPractice
-			nBlock = MWPI.Param('practice', 'run', 'nBlock');
-			strProgressFeedback = ['Trials complete: ' num2str(kBlock) '/' ...
-				num2str(nBlock)];
 			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' ...
-				strProgressFeedback '\n'];
+				strProgressFeedback];
 		else
 			strFeedback = ['<color:' strColor '>' strCorrect ' (' ...
 				StringMoney(dRewardTest,'sign',true) ')</color>\n' strFixationFeedback ...
-				'Current total: ' StringMoney(mwpi.reward)];
+				'Current total: ' StringMoney(mwpi.reward) '\n' strProgressFeedback];
 		end
 		
 		% show feedback in an empty area of the screen

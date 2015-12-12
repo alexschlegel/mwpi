@@ -151,39 +151,40 @@ clear cleanupObj;
 end
 % ==================== Local Functions =============================%
 
-    function cleanupfn
-        % cleanup if the run is interrupted / when it ends
-        global mwpi_g;
-        global sRun;
-        global finished;
-		global kRun_g;
-		
-		exp = mwpi_g.Experiment;
-        
-		ListenChar(0);
-		
-        % save results 
-        if ~isempty(sRun.res)
-            if ~finished
-                bSave = exp.Prompt.YesNo('WARNING: Run was not finished. Save results?', ...
-                    'mode','command_window');
-            else
-                bSave = true;
-            end
-            
-            if bSave
-				sRuns = exp.Info.Get('mwpi','run');
-				if isempty(sRuns)
-					sRuns = sRun;
-				else
-					sRuns(kRun_g) = sRun;   
-				end
-                exp.Info.Set('mwpi','run', sRuns);
-				exp.Info.Set('mwpi','dm',mwpi_g.dm);
-				exp.Info.Set('mwpi','currD', mwpi_g.currD);
-				exp.Info.Set('mwpi','currReward',mwpi_g.reward);
-                exp.Info.AddLog('Results saved.');
-				
-            end
-        end
+function cleanupfn
+% cleanup if the run is interrupted / when it ends
+global mwpi_g;
+global sRun;
+global finished;
+global kRun_g;
+
+exp = mwpi_g.Experiment;
+
+ListenChar(0);
+
+% save results
+if ~isempty(sRun.res)
+	if ~finished
+		bSave = exp.Prompt.YesNo('WARNING: Run was not finished. Save results?', ...
+			'mode','command_window');
+	else
+		bSave = true;
 	end
+	
+	if bSave
+		sRuns = exp.Info.Get('mwpi','run');
+		if isempty(sRuns)
+			sRuns = sRun;
+		else
+			sRuns(kRun_g) = sRun;
+		end
+		exp.Info.Set('mwpi','run', sRuns);
+		exp.Info.Set('mwpi','dm',mwpi_g.dm);
+		exp.Info.Set('mwpi','dmStat', mwpi_g.dm.CompareTasks());
+		exp.Info.Set('mwpi','currD', mwpi_g.currD);
+		exp.Info.Set('mwpi','currReward',mwpi_g.reward);
+		exp.Info.AddLog('Results saved.');
+		
+	end
+end
+end
