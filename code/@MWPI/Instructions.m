@@ -93,9 +93,7 @@ exp.Show.Text(['<color:' colHint '><size:1.5>B</size></color>'], [2*hintOffset,0
 % run!
 exp.Scheduler.Pause;
 mwpi.nCorrect = 0;
-res = mwpi.Block(1,1, 'sParam', sParam);
-res.tSequence
-res.prompt.tShow
+mwpi.Block(1,1, 'sParam', sParam);
 exp.Scheduler.Resume;
 
 exp.Scanner.StopScan;
