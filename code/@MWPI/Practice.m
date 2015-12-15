@@ -13,9 +13,6 @@ exp = mwpi.Experiment;
 % turn on keyboard listening
 ListenChar(2);
 
-% scanner simulation starts
-exp.Scanner.StartScan; 
-
 % initialize param struct to correct size
 mwpi.sParam = MWPI.CalcParams('practice', true);
 mwpi.sParam = structfun(@(f) f*0, mwpi.sParam, 'uni', false);
@@ -52,7 +49,6 @@ assess.Run(...
 
 % finish
 exp.Scheduler.Resume;
-exp.Scanner.StopScan;
 exp.AddLog('Training run complete');
 exp.Show.Text('Practice Finished!\nPlease wait for the experimenter.');
 exp.Window.Flip;
@@ -80,7 +76,7 @@ exp.Subject.AddLog('Ability assessment saved to subject info.');
 %---------------------------------------------------------------------%
 	function bCorrect = OneBlock(d, sTaskParam)
 		% Do a single block, including the preceding rest period.
-		% This is the callback function for each subject.assess object.
+		% This is the callback function for the subject.assess object.
 		%
 		% In:
 		%	d:			difficulty of this block's wm / test stimulus

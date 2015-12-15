@@ -77,15 +77,9 @@ classdef MWPI < PTB.Object
             
             opt.name = 'mwpi';
             opt.context = conditional(opt.practice,'psychophysics','fmri');
-			if opt.debug == 2 || opt.practice
-				opt.scanner_simulate = true;
-			end
- 			if opt.practice
- 				opt.event_hide = {'scanner'};
- 			end
-            opt.tr = MWPI.Param('time','tr');
+            opt.tr = MWPI.Param('trTime');
             opt.input_scheme = 'lrud';
-            opt.disable_key = false;
+            %opt.disable_key = false;
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');
             opt.text_family = MWPI.Param('text','family');
@@ -110,6 +104,10 @@ classdef MWPI < PTB.Object
 			mwpi.Experiment.Window.AddLog('Textures closed.');
 			
             mwpi.Experiment.End(varargin{:});
+			
+			if ~mwpi.bPractice
+				disp(['Total reward: ' StringMoney(mwpi.reward)]);
+			end
         end
     end
 end

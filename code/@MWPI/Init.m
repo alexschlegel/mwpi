@@ -8,15 +8,15 @@ function Init(mwpi)
 exp = mwpi.Experiment;
 
 % define keys
-    exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
-	exp.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
-	exp.Input.Set('shrink',			MWPI.Param('key','shrink'));
-	exp.Input.Set('grow',			MWPI.Param('key','grow'));
+exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
+exp.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
+exp.Input.Set('shrink',			MWPI.Param('key','shrink'));
+exp.Input.Set('grow',			MWPI.Param('key','grow'));
 	
 % read in the arrow image
 bArrow = imread(MWPI.Param('path','arrow'));
 arrArrow = conditional(bArrow, reshape(MWPI.Param('color','back'),1,1,3), ...
-								 reshape(MWPI.Param('color','fore'),1,1,3));
+							   reshape(MWPI.Param('color','fore'),1,1,3));
 mwpi.arrow = uint8(arrArrow);							 
 
 %set the reward (fMRI only)
@@ -72,14 +72,19 @@ end
  end
 	 
 % open textures
-mwpi.sTexture.stim			= exp.Window.OpenTexture('stim');
-mwpi.sTexture.arrow			= exp.Window.OpenTexture('arrow');
-mwpi.sTexture.retention		= exp.Window.OpenTexture('retention');
-mwpi.sTexture.retentionLg	= exp.Window.OpenTexture('retentionLg');
-mwpi.sTexture.retentionSm	= exp.Window.OpenTexture('retentionSm');
-mwpi.sTexture.test			= exp.Window.OpenTexture('test');
-mwpi.sTexture.testYes		= exp.Window.OpenTexture('testYes');
-mwpi.sTexture.testNo		= exp.Window.OpenTexture('testNo');
+cTextureNames = {'stim',		...
+				 'arrow',		...
+				 'retention',	...
+				 'retentionLg',	...
+				 'retentionSm',	...
+				 'test',		...
+				 'testYes',		...
+				 'testNo'		...
+				 };
+			 
+for i = 1:numel(cTextureNames)
+	mwpi.sTexture.(cTextureNames{i}) = exp.Window.OpenTexture(cTextureNames{i});
+end
     
 exp.AddLog('initialized experiment');
 

@@ -70,7 +70,7 @@ function P = InitializeP
 	
 	%--sequence parameters----------------------------------
 
-	P.trTime = 2; % seconds
+	P.trTime = 2000; % milliseconds
 	% all remaining times are in trs.
 	
 	P.exp = struct(...
@@ -123,6 +123,7 @@ function P = InitializeP
 					 P.exp.post.time;
 				 
 	P.exp.nBlock = P.exp.run.nBlock * P.exp.nRun;
+	P.exp.time   = P.exp.run.time   * P.exp.nRun;
 	P.exp.nBlockPerClass = P.exp.nBlock / numel(P.stim.class);
 				 
 	% parameter modifications for the practice run:
@@ -139,29 +140,27 @@ function P = InitializeP
 	);
 	P.practice.run.nBlock = numel(P.stim.class) * P.practice.nBlockPerClass;
 	P.practice.nBlock = P.practice.run.nBlock * P.practice.nRun;
+	P.practice.block = structtreefun(@(t) t * P.trTime, P.exp.block);
     
-    P.reward = struct(...
-        'base'  ,			20, ...
-        'max'   ,			40, ...
-        'penalty',			5,  ... penalty is this number times reward
-		'fixationPenalty',	0.1	... penalty per wrong fixation task is this number times reward
-        );
-    P.reward.rewardPerBlock		= (P.reward.max - P.reward.base) / P.exp.nBlock;
-    P.reward.penaltyPerBlock	= P.reward.rewardPerBlock * P.reward.penalty;
-	P.reward.penaltyPerFixation = P.reward.rewardPerBlock * P.reward.fixationPenalty;
-	P.reward.fFixation			= @(nYes, nNo) -P.reward.penaltyPerFixation * nNo;
-
+% fixation task
 	P.fixation = struct(...
-		'tChange',		0.1,	...
-		'tRespond',		0.5,	...
-		'tRestMin',		0,		...
 		'growMult',		1.1,	... size multiplier for growing
 		'shrinkMult',	0.9		... size multiplier for shrinking
 		);
-	P.fixation.tRestMax = 1.5 - P.fixation.tRespond;
-	P.fixation.tPreMin  = P.fixation.tRespond + P.fixation.tRestMin;
-	P.fixation.tPreMax  = P.fixation.tRespond + P.fixation.tRestMax;
-	P.fixation.tTask    = P.fixation.tChange + P.fixation.tRespond;
+	
+	% time parameters for fMRI run
+	P.exp.fixation = struct(...
+		'tChange',		0.1,	...
+		'tRespond',		0.5,	...
+		'tRestMin',		0		...
+		);
+	P.exp.fixation.tRestMax = 1.5 - P.exp.fixation.tRespond;
+	P.exp.fixation.tPreMin  = P.exp.fixation.tRespond + P.exp.fixation.tRestMin;
+	P.exp.fixation.tPreMax  = P.exp.fixation.tRespond + P.exp.fixation.tRestMax;
+	P.exp.fixation.tTask    = P.exp.fixation.tChange + P.exp.fixation.tRespond;
+	
+	% time parameters for practice run
+	P.practice.fixation = structfun(@(t) t * P.trTime, P.exp.fixation, 'uni',false);
     
 	%--display parameters-------------------------------------
 	P.color = struct(...
@@ -203,6 +202,22 @@ function P = InitializeP
 		'xstep',				0.01,	...
 		'chancePerformance',	0.25	...
 		);
+	%--reward parameters-------------------------------------------
+	    P.reward = struct(...
+        'base'  ,			30, ...
+		'expected',			40, ...
+        'max'   ,			50, ...
+		'fixationPenalty',	0.01	... penalty per wrong fixation task
+        );
+    P.reward.rewardPerBlock		= (P.reward.max - P.reward.base) / P.exp.nBlock;
+	
+	nExpectedCorrect		= P.curve.thresholdPerformance * P.exp.nBlock;
+	nExpectedIncorrect		= P.exp.nBlock - nExpectedCorrect;
+	expectedTotalPenalty	= nExpectedCorrect * P.reward.rewardPerBlock + P.reward.base - P.reward.expected;
+	
+    P.reward.penaltyPerBlock	= expectedTotalPenalty / nExpectedIncorrect;
+	P.reward.fFixation			= @(nYes, nNo) -P.reward.fixationPenalty * nNo;
+
 	%--file parameters--------------------------------------------
 	P.path = struct(...
 		'arrow',	PathUnsplit(DirAppend(strDirBase, 'img'),'arrow','bmp') ...
