@@ -40,19 +40,17 @@ if ~mwpi.bPractice
 	if isempty(mwpi.dm)
 		
 		n = MWPI.Param('exp', 'nBlockPerClass');
-		assess = exp.Subject.Get('assessment');
+		ability = exp.Subject.Get('ability');
 		
-		if isempty(assess)
+		if isempty(ability)
 			warning('no threshold ability calculated, using default start levels');
-			assess = MWPI.Param('exp', 'startLevel');
-			mwpi.currD = assess;
-		else
-			mwpi.currD = assess.ability;
+			ability = MWPI.Param('exp', 'startLevel');
 		end
 		
+		mwpi.currD = ability;
 		target = MWPI.Param('curve', 'thresholdPerformance');
 		mwpi.dm = subject.difficultymatch(n, ...
-			'assessment',	assess,	...
+			'assessment',	ability,	...
 			'target',		target	...
 			);
 	end

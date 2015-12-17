@@ -66,12 +66,13 @@ end
 exp.Info.Set('mwpi','run',sRuns);
 exp.Info.Unset('mwpi','currRes');
 
-exp.Info.Set('mwpi','assessment', assess);
+sInfo = assess.GetTaskInfo;
+exp.Info.Set('mwpi','sTaskInfo', sInfo);
 exp.Info.Set('mwpi','param', mwpi.sParam);
 exp.Info.AddLog('Results saved.');
 
-exp.Subject.Set('assessment', assess);
-exp.Subject.AddLog('Ability assessment saved to subject info.');
+exp.Subject.Set('ability', sInfo.estimate.ability);
+exp.Subject.AddLog('Ability estimate saved to subject info.');
 
 %--------------------------------------------------------------------------%
 	function sTaskParam = GenParamStruct(kTask, ~, kProbeTotal)
