@@ -28,7 +28,7 @@ minPerClass = MWPI.Param('practice', 'nBlockPerClass');
 maxPerClass = MWPI.Param('practice', 'nBlockPerClass');
 
 % initialize assessment object
-assess = subject.assess(repmat({@OneBlock}, size(indClass)), ...
+mwpi.assess = subject.assess(repmat({@OneBlock}, size(indClass)), ...
 	'chance',		curve.chancePerformance,					...
 	'estimate',		estimate,									...
 	'target',		curve.thresholdPerformance,					...
@@ -39,7 +39,7 @@ assess = subject.assess(repmat({@OneBlock}, size(indClass)), ...
 exp.Scheduler.Pause;
 
 % run the assessment
-assess.Run(...
+mwpi.assess.Run(...
 	'param',	@GenParamStruct,	...
 	'min',		minPerClass,		...
 	'max',		maxPerClass			...
@@ -66,7 +66,7 @@ end
 exp.Info.Set('mwpi','run',sRuns);
 exp.Info.Unset('mwpi','currRes');
 
-sInfo = assess.GetTaskInfo;
+sInfo = mwpi.assess.GetTaskInfo;
 exp.Info.Set('mwpi','sTaskInfo', sInfo);
 exp.Info.Set('mwpi','param', mwpi.sParam);
 exp.Info.AddLog('Results saved.');
@@ -79,20 +79,23 @@ exp.Subject.AddLog('Ability estimate saved to subject info.');
 		% generate a parameter struct for a random block of type kTask
 		% (param callback function for subject.assess/Run)
 		
-		sTaskParam.wClass = kTask;
+		sTaskParam.cClass = kTask;
 		
-		sTaskParam.vClass	= randFrom(indClass);
-		sTaskParam.dClass	= randFrom(indClass);
-		sTaskParam.cue		= randFrom(1:2);
-		sTaskParam.posMatch = randFrom(1:4);
+		sTaskParam.vClass	 = randFrom(indClass);
+		sTaskParam.ucClass	 = randFrom(setdiff(indClass, kTask));
+		sTaskParam.posCued	 = randFrom(1:4);
+		sTaskParam.posUncued = randFrom(setdiff(1:4, sTaskParam.posCued));
+		sTaskParam.posMatch  = randFrom(1:4);
 		
-		sTaskParam.lClass = conditional(sTaskParam.cue == 1, sTaskParam.wClass, sTaskParam.dClass);
-		sTaskParam.rClass = conditional(sTaskParam.cue == 2, sTaskParam.wClass, sTaskParam.dClass);
+		sTaskParam.promptClass(1,1,sTaskParam.posCued) = kTask;
+		sTaskParam.promptClass(1,1,sTaskParam.posUncued) = sTaskParam.ucClass;
+		sTaskParam.promptClass(1,1,setdiff(1:4, [sTaskParam.posCued, sTaskParam.posUncued])) = ...
+			randomize(setdiff(indClass, [kTask, sTaskParam.ucClass]));
 		
 		% update cumulative record of parameters
 		cParam = fieldnames(mwpi.sParam);
 		for i = 1:numel(cParam)
-			mwpi.sParam.(cParam{i})(kProbeTotal) = sTaskParam.(cParam{i});
+			mwpi.sParam.(cParam{i})(:, kProbeTotal, :) = sTaskParam.(cParam{i});
 		end
 		
 		% add additional fields to pass

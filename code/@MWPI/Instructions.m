@@ -56,13 +56,13 @@ exp.Show.Instructions(strExample);
 %--- example run ----%
 
 % create dummy parameter struct
-sParam.lClass   = 1;
-sParam.rClass   = 3;
-sParam.wClass   = 3;
-sParam.dClass   = 1;
-sParam.cue	    = 2;
-sParam.vClass   = 2;
-sParam.posMatch = 2;
+sParam.promptClass = reshape([2 3 4 1], 1, 1, []);
+sParam.cClass    = 3;
+sParam.ucClass   = 1;
+sParam.posCued   = 2;
+sParam.posUncued = 4;
+sParam.vClass    = 2;
+sParam.posMatch  = 2;
 
 kRun = 1;
 kBlock = 1;
@@ -72,13 +72,13 @@ arrAbility = [0.05; 0.05; 0.05; 0.05];
 seedCuedFig = mwpi.PrepTextures(sParam, kRun, kBlock, d, arrAbility);
 hintSzVA = MWPI.Param('stim','size');
 hintSzPX = round(exp.Window.va2px(hintSzVA));
-hintFig = MWPI.Stimulus(sParam.wClass, seedCuedFig, d, hintSzPX, ...
+hintFig = MWPI.Stimulus(sParam.cClass, seedCuedFig, d, hintSzPX, ...
 	'base_color', colHintRGBA(1:3));
 hintFig = hintFig.base;
 
 hintOffset = MWPI.Param('stim', 'offset');
 
-hintFigTexture = {'arrow', 'retention', 'retentionLg', 'retentionSm', 'test'};
+hintFigTexture = {'frame', 'retention', 'retentionLg', 'retentionSm', 'test'};
 
 for kT = 1:numel(hintFigTexture)
 	exp.Show.Text(['<color:' colHint '>Remember</color>'], ...

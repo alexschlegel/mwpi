@@ -24,6 +24,7 @@ classdef MWPI < PTB.Object
 		% objects
         Experiment;
 		dm;		% subject.difficultymatch object, used only for fMRI runs
+		assess; % subject.assess object, used only for practice runs
 		
 		% parameters
 		nRun;
@@ -37,7 +38,6 @@ classdef MWPI < PTB.Object
 		nCorrect;  % per run
 		
 		% visuals
-		arrow;
 		sTexture;
     end
     % PUBLIC PROPERTIES-------------------------------------------------%

@@ -21,9 +21,9 @@ fTAbs		= conditional(mwpi.bPractice, @PTB.Now, @() exp.Scanner.TR);
 tLast = 0;
 
 res.bCorrect = [];
-res.wClass = opt.sParam.wClass(kRun, kBlock);
+res.cClass = opt.sParam.cClass(kRun, kBlock);
 res.vClass = opt.sParam.vClass(kRun, kBlock);
-res.dClass = opt.sParam.dClass(kRun, kBlock);
+res.ucClass = opt.sParam.ucClass(kRun, kBlock);
 
 % whether to reset serial port and response variable
 bReset = true;
@@ -57,17 +57,17 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		tAbs = fTAbs();
 		tLast = tAbs;
 		
-		% debug
-		if mwpi.bPractice
-			disp(['prompt function started at ' num2str(tAbs) ' ms']);
-		else
-			disp(['prompt function started at TR ' num2str(tAbs)]);
-		end
-		% end debug
+% 		% debug
+% 		if mwpi.bPractice
+% 			disp(['prompt function started at ' num2str(tAbs) ' ms']);
+% 		else
+% 			disp(['prompt function started at TR ' num2str(tAbs)]);
+% 		end
+% 		% end debug
 
 		cX = {	mwpi.sTexture.stim
 				{'Blank','fixation',false}
-				mwpi.sTexture.arrow
+				mwpi.sTexture.frame
 			};
 		
 		tShow = [	num2cell(cumsum( [	MWPI.Param(strDomain,'block','prompt','tStim')
@@ -90,13 +90,13 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		tDiff = tAbs - tLast;
 		tLast = tAbs;
 		
-		% debug
-		if mwpi.bPractice
-			disp(['retention function started at ' num2str(tAbs) ' ms (+' num2str(tDiff) ')']);
-		else
-			disp(['retention function started at TR ' num2str(tAbs) '(+' num2str(tDiff) ')']);
-		end
-		% end debug
+% 		% debug
+% 		if mwpi.bPractice
+% 			disp(['retention function started at ' num2str(tAbs) ' ms (+' num2str(tDiff) ')']);
+% 		else
+% 			disp(['retention function started at TR ' num2str(tAbs) '(+' num2str(tDiff) ')']);
+% 		end
+% 		% end debug
 		
 		% define some time functions
 		fTElapsed = @() fTAbs() - tAbs;
@@ -187,13 +187,13 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		tDiff = tAbs - tLast;
 		tLast = tAbs;
 		
-		% debug
-		if mwpi.bPractice
-			disp(['test function started at ' num2str(tAbs) ' ms (+' num2str(tDiff) ')']);
-		else
-			disp(['test function started at TR ' num2str(tAbs) '(+' num2str(tDiff) ')']);
-		end
-		% end debug
+% 		% debug
+% 		if mwpi.bPractice
+% 			disp(['test function started at ' num2str(tAbs) ' ms (+' num2str(tDiff) ')']);
+% 		else
+% 			disp(['test function started at TR ' num2str(tAbs) '(+' num2str(tDiff) ')']);
+% 		end
+% 		% end debug
 		
 		cX = {	%{'Blank','fixation',false}
 				mwpi.sTexture.test
@@ -243,13 +243,13 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		tAbs = fTAbs();
 		tDiff = tAbs - tLast;
 		
-		% debug
-		if mwpi.bPractice
-			disp(['feedback function started at ' num2str(tAbs) ' ms (+' num2str(tDiff) ')']);
-		else
-			disp(['feedback function started at TR ' num2str(tAbs) '(+' num2str(tDiff) ')']);
-		end
-		% end debug
+% 		% debug
+% 		if mwpi.bPractice
+% 			disp(['feedback function started at ' num2str(tAbs) ' ms (+' num2str(tDiff) ')']);
+% 		else
+% 			disp(['feedback function started at TR ' num2str(tAbs) '(+' num2str(tDiff) ')']);
+% 		end
+% 		% end debug
 		
 	% update correct total, reward, show feedback screen	
 		
@@ -301,7 +301,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		% construct complete feedback string
 		
 		strProgressFeedback = ['Trials completed: ' num2str(kBlock) '/' ...
-				num2str(size(opt.sParam.cue, 2))];
+				num2str(size(opt.sParam.cClass, 2))];
 		
 		if mwpi.bPractice
 			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' ...

@@ -95,7 +95,7 @@ clear cleanupObj;
 		kBlock = kBlock + 1;
 		
 		% update currD with difficulty for next probe
-		kTask = mwpi.sParam.wClass(kRun, kBlock);
+		kTask = mwpi.sParam.cClass(kRun, kBlock);
 		mwpi.currD(kTask) = mwpi.dm.GetNextProbe(kTask);
 		d = mwpi.currD(kTask);
 		
@@ -145,7 +145,7 @@ clear cleanupObj;
 		% probe
 		
 		resLast = sRun.res(end);
-		kTaskLast = mwpi.sParam.wClass(kRun, kBlock);
+		kTaskLast = mwpi.sParam.cClass(kRun, kBlock);
 		mwpi.dm.AppendProbe(kTaskLast, mwpi.currD(kTaskLast), resLast.bCorrect);
 	end
 end

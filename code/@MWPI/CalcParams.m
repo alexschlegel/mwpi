@@ -14,19 +14,22 @@ function s = CalcParams(varargin)
 %		All fields are nRun x nBlock arrays unless otherwise indicated.
 %
 %		Note that some fields are redundant for convenience. For instance,
-%		prompt1Class and prompt2Class together contain the same information
-%		about the prompt classes as wClass and dClass, except that the
-%		first two are categorized by presentation order, and the second by
-%		which is cued.
+%		promptClass together with posCued and posUncued contain the
+%		information contained in cClass and ucClass.
 %
-%		s.lClass:		class of left prompt figure
-%		s.rClass:		class of right prompt figure
-%		s.wClass:		class of working memory (cued) prompt figure
-%		s.dClass:		class of distractor (non-cued) prompt figure
-%		s.cue:			1 or 2, specifies which prompt to cue (1 = left, 2 = right)
+%		For positional parameters, the following encoding is used:
+%		1 = up, 2 = right, 3 = down, 4 = left
+%
+%		s.promptClass:	(nRun x nBlock x 4 array) the stimulus 
+%						classes on the prompt screen, in clockwise order
+%						starting from the top (along 3rd dimension)
+%		s.cClass:		class of cued prompt figure (working memory figure)
 %		s.vClass:		class of visual figure (during retention)
+%		s.ucClass:		class of uncued framed prompt figure
+%		s.posCued:		position of the cued prompt figure
+%		s.posUncued:	position of the uncued framed prompt figure
 %		s.posMatch:     position of the stimulus matching the cued prompt
-%						during the test: 1 = up, 2 = right, 3 = down, 4 = left
+%						during the test
 
 % Updated: 2015-08-20
 
@@ -41,23 +44,33 @@ strDomain = conditional(opt.practice, 'practice', 'exp');
 nRun	 =  MWPI.Param(strDomain, 'nRun');
 nBlock   =  MWPI.Param(strDomain, 'run','nBlock');
 nRepComb =  unless(MWPI.Param(strDomain, 'run','nCondRep'), ceil(nBlock / numel(arrClassComb)));
-nRepClass = nBlock/numel(arrClass);
 
 % cued and retention period classes
 indClassComb = blockdesign(1:numel(arrClassComb),nRepComb,nRun);
 indClassComb = indClassComb(:,1:nBlock);
 
-s.wClass = arrayfun(@(ind) arrClassComb{ind}(1), indClassComb);
+s.cClass = arrayfun(@(ind) arrClassComb{ind}(1), indClassComb);
 s.vClass = arrayfun(@(ind) arrClassComb{ind}(2), indClassComb);
 
-% non-cued stimulus class
-s.dClass = blockdesign(arrClass, nRepClass, nRun);
+% uncued framed stimulus class - chosen randomly from those available when
+% cClass is removed.
+s.ucClass = arrayfun(@(cClass) randFrom(setdiff(arrClass,cClass)), s.cClass);
 
-% which to cue?
-s.cue = blockdesign(1:2, nBlock/2, nRun);
+% position of prompt screen stimuli, frames and cue
+% here the position of the cued stimulus is counterbalanced, but the
+% position of the other frame is random.
+s.posCued = blockdesign(1:4, ceil(nBlock / 4), nRun);
+s.posCued = s.posCued(:,1:nBlock);
 
-s.lClass = conditional(s.cue == 1, s.wClass, s.dClass);
-s.rClass = conditional(s.cue == 2, s.wClass, s.dClass);
+posOthers = arrayfun(@(cued) randomize(setdiff((1:4)', cued)), s.posCued, 'uni', false);
+
+s.posUncued = cellfun(@(po) po(1), posOthers);
+for j = 1:nRun
+	for k = 1:nBlock
+		s.promptClass(j,k,posOthers{j,k}) = [s.ucClass(j,k); setdiff(arrClass, [s.cClass(j,k), s.ucClass(j,k)])];
+		s.promptClass(j,k,s.posCued(j,k)) = s.cClass(j,k);
+	end
+end
 
 % which tests match cued prompt?
 s.posMatch = blockdesign([1,2,3,4], nBlock/4, nRun);
