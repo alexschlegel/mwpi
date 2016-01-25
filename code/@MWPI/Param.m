@@ -87,7 +87,7 @@ function P = InitializeP
 		
 	P.exp.block = struct;
 		P.exp.block.prompt = struct(...
-			'time',		1 	 ...
+			'time',		2 	 ...
 			);
 			P.exp.block.prompt.tStim	 = P.exp.block.prompt.time/2;
 			P.exp.block.prompt.tPostStim = P.exp.block.prompt.time - P.exp.block.prompt.tStim;
@@ -146,8 +146,8 @@ function P = InitializeP
     
 % fixation task
 	P.fixation = struct(...
-		'growMult',		1.1,	... size multiplier for growing
-		'shrinkMult',	0.9		... size multiplier for shrinking
+		'growMult',		1.05,	... size multiplier for growing
+		'shrinkMult',	0.95		... size multiplier for shrinking
 		);
 	
 	% time parameters for fMRI run
