@@ -6,7 +6,7 @@ function Practice(mwpi, kRun)
 % In:
 %	kRun: which run to execute
 %
-% Updated: 2015-09-03
+% Updated: 2016-01-27
 
 exp = mwpi.Experiment;
 
@@ -14,8 +14,13 @@ exp = mwpi.Experiment;
 ListenChar(2);
 
 % initialize param struct to correct size
-mwpi.sParam = MWPI.CalcParams('practice', true);
-mwpi.sParam = structfun(@(f) f*0, mwpi.sParam, 'uni', false);
+cParamField = {'cClass', 'vClass', 'ucClass', 'posCued', 'posUncued', 'posMatch', 'promptClass', 'seed'};
+sParam = exp.Info.Get('mwpi','param');
+if isempty(sParam)
+	clear sParam;
+end
+sParam(kRun,1:mwpi.nBlock) = dealstruct(cParamField{:}, []);
+exp.Info.Set('mwpi','param',sParam);
 
 mwpi.nCorrect = 0;
 exp.Info.Set('mwpi','currRes', []);
@@ -68,7 +73,6 @@ exp.Info.Unset('mwpi','currRes');
 
 sInfo = mwpi.assess.GetTaskInfo;
 exp.Info.Set('mwpi','sTaskInfo', sInfo);
-exp.Info.Set('mwpi','param', mwpi.sParam);
 exp.Info.AddLog('Results saved.');
 
 exp.Subject.Set('ability', sInfo.estimate.ability);
@@ -92,15 +96,15 @@ exp.Subject.AddLog('Ability estimate saved to subject info.');
 		sTaskParam.promptClass(1,1,setdiff(1:4, [sTaskParam.posCued, sTaskParam.posUncued])) = ...
 			randomize(setdiff(indClass, [kTask, sTaskParam.ucClass]));
 		
+		sTaskParam.seed = MWPI.GenSeeds;
+		
 		% update cumulative record of parameters
-		cParam = fieldnames(mwpi.sParam);
-		for i = 1:numel(cParam)
-			mwpi.sParam.(cParam{i})(:, kProbeTotal, :) = sTaskParam.(cParam{i});
-		end
+		sParam = exp.Info.Get('mwpi','param');
+		sParam(kRun, kProbeTotal) = sTaskParam;
+		exp.Info.Set('mwpi','param', sParam);
 		
 		% add additional fields to pass
 		sTaskParam.mwpi = mwpi;
-		sTaskParam.kRun = kRun;
 	end
 %------------------------------------------------------------------------%
 end
@@ -126,7 +130,6 @@ mwpi = sTaskParam.mwpi;
 exp  = mwpi.Experiment;
 
 kBlock = sTaskParam.kProbeTotal;
-kRun   = sTaskParam.kRun;
 
 % rest and generate new textures
 arrAbility = vertcat(sTaskParam.estimate(:).ability);
@@ -137,10 +140,13 @@ DoRest(PTB.Now, tPreBlock, d, arrAbility, sTaskParam);
 exp.AddLog(['starting block ' num2str(kBlock)]);
 
 % run the block
-newRes = mwpi.Block(kRun, kBlock);
+newRes = mwpi.Block(kBlock, sTaskParam);
 bCorrect = newRes.bCorrect;
 
-% save results
+% save results (including difficulty levels used)
+newRes.d = d;
+newRes.arrAbility = arrAbility;
+
 res = exp.Info.Get('mwpi','currRes');
 if isempty(res)
 	res = newRes;
@@ -175,7 +181,7 @@ end
 		exp.Show.Blank;
 		exp.Window.Flip;
 		
-		mwpi.PrepTextures(sTaskParam, 1, 1, dNext, arrAbilityNext);
+		mwpi.PrepTextures(sTaskParam, dNext, arrAbilityNext);
 		
 		while PTB.Now < tStart + tWait
 			exp.Scheduler.Wait;

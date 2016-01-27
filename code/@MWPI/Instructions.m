@@ -68,20 +68,20 @@ exp.Show.Instructions(strExample);
 %--- example run ----%
 
 % create dummy parameter struct
-sParam.promptClass = reshape([2 3 4 1], 1, 1, []);
+sParam.promptClass = [2 3 4 1]';
 sParam.cClass    = 3;
 sParam.ucClass   = 1;
 sParam.posCued   = 2;
 sParam.posUncued = 4;
 sParam.vClass    = 2;
 sParam.posMatch  = 2;
+sParam.seed = MWPI.GenSeeds;
+seedCuedFig = sParam.seed(sParam.posCued);
 
-kRun = 1;
-kBlock = 1;
 d = 0.05;
 arrAbility = [0.05; 0.05; 0.05; 0.05];
 
-seedCuedFig = mwpi.PrepTextures(sParam, kRun, kBlock, d, arrAbility);
+mwpi.PrepTextures(sParam, d, arrAbility);
 hintSzVA = MWPI.Param('stim','size');
 hintSzPX = round(exp.Window.va2px(hintSzVA));
 hintFig = MWPI.Stimulus(sParam.cClass, seedCuedFig, d, hintSzPX, ...
@@ -107,7 +107,7 @@ exp.Show.Text(['<color:' colHint '><size:1.5>B</size></color>'], [2*hintOffset,0
 % run!
 exp.Scheduler.Pause;
 mwpi.nCorrect = 0;
-mwpi.Block(1,1, 'sParam', sParam);
+mwpi.Block(1, sParam, 'bProgress', false);
 exp.Scheduler.Resume;
 
 % pause

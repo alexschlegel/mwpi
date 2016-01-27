@@ -14,7 +14,7 @@ function FmriRun(mwpi, kRun)
 global mwpi_g;
 mwpi_g = mwpi;
 global sRun;
-sRun = struct('res',[], 'tStart', [], 'tEnd', [], 'tSequence', [], 'bAbort',[]);
+sRun = dealstruct('res','tStart','tEnd','tSequence','bAbort',[]);
 global finished;
 finished = false; %#ok<NASGU>
 global kRun_g;
@@ -95,12 +95,12 @@ clear cleanupObj;
 		kBlock = kBlock + 1;
 		
 		% update currD with difficulty for next probe
-		kTask = mwpi.sParam.cClass(kRun, kBlock);
+		kTask = mwpi.sParam(kRun, kBlock).cClass;
 		mwpi.currD(kTask) = mwpi.dm.GetNextProbe(kTask);
 		d = mwpi.currD(kTask);
 		
 		% prepare the next probe		
-		mwpi.PrepTextures(mwpi.sParam, kRun, kBlock, d, mwpi.currD);
+		mwpi.PrepTextures(mwpi.sParam(kRun, kBlock), d, mwpi.currD);
 			
         exp.Scheduler.Wait;
 	end
@@ -110,9 +110,11 @@ clear cleanupObj;
         
         exp.AddLog(['block ' num2str(kBlock) ' start']);
         
-        resCur = mwpi.Block(kRun, kBlock);
+        resCur = mwpi.Block(kBlock, mwpi.sParam(kRun, kBlock));
 		
-		resCur.currD =  mwpi.currD;
+		% save difficulties used for this block
+		resCur.d =  mwpi.currD(mwpi.sParam(kRun,kBlock).cClass);
+		resCur.arrAbility = mwpi.currD;
         
         if isempty(sRun.res)
             sRun.res = resCur;
@@ -145,7 +147,7 @@ clear cleanupObj;
 		% probe
 		
 		resLast = sRun.res(end);
-		kTaskLast = mwpi.sParam.cClass(kRun, kBlock);
+		kTaskLast = mwpi.sParam(kRun, kBlock).cClass;
 		mwpi.dm.AppendProbe(kTaskLast, mwpi.currD(kTaskLast), resLast.bCorrect);
 	end
 end

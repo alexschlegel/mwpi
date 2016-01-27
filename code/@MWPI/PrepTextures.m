@@ -1,4 +1,4 @@
-function seedCuedFig = PrepTextures(mwpi, sParam, kRun, kBlock, d, arrAbility)
+function PrepTextures(mwpi, sParam, d, arrAbility)
 % PrepTextures - prepare the textures for a single block of mwpi.
 %	They should have already been opened by the calling function.
 %	Textures:	'stim':			4 prompt stimuli, two with frames
@@ -12,44 +12,15 @@ function seedCuedFig = PrepTextures(mwpi, sParam, kRun, kBlock, d, arrAbility)
 %
 %	Syntax: mwpi.PrepTextures(kRun, kBlock)
 %
-%	In:	sParam:		the parameter struct (see MWPI.CalcParams)
-%		kRun:		the current run
-%		kBlock:		the current block
+%	In:	sParam:		the parameter struct for this block (see MWPI.CalcParams)
 %		d:			the difficulty of the wm / test stimulus for this block
 %		arrAbility:	a nClass x 1 array of ability estimates in the range [0, 1]
 %					that determin the difficulty level for each class for
 %					stimuli other than the wm / test stimulus
 %
-%	Out: seedCuedFig: the seed used to generate the cued prompt figure
-%					  (i.e. the WM figure)
-%
-%	Updated: 2015-10-17
+%	Updated: 2016-01-27
 
-% verify block and run
-if kBlock > size(sParam.cClass, 2)
-	error('Block out of range');
-elseif kRun > size(sParam.cClass, 1)
-	error('Run out of range');
-end
-
-shw			 = mwpi.Experiment.Show;
-promptClass  = sParam.promptClass(kRun, kBlock, :);
-posCued      = sParam.posCued(kRun, kBlock);
-posUncued	 = sParam.posUncued(kRun, kBlock);
-
-% generate some seeds manually, so we can avoid a repeat in the very unlikely
-% case that one occurs
-nSeed = 5;
-
-bSeedsDone = false;
-while ~bSeedsDone
-	arrSeed = arrayfun(@(n) randseed2, 1:nSeed);
-	if numel(unique(arrSeed)) == nSeed
-		bSeedsDone = true;
-	end
-end
-
-seedCuedFig = arrSeed(posCued);
+shw	= mwpi.Experiment.Show;
 
 % make the stimulus textures
 
@@ -71,12 +42,12 @@ sStim = struct(...
 	);
 
 for kPos = 1:4
-	bCue = posCued == kPos;
-	bFrame = bCue || posUncued == kPos;
+	bCue = sParam.posCued == kPos;
+	bFrame = bCue || sParam.posUncued == kPos;
 	
-	kClass = promptClass(kPos);
+	kClass = sParam.promptClass(kPos);
 	level = conditional(bCue, d, arrAbility(kClass));
-	sStim(kPos) = MWPI.Stimulus(kClass, arrSeed(kPos), level, szStimPX, ...
+	sStim(kPos) = MWPI.Stimulus(kClass, sParam.seed(kPos), level, szStimPX, ...
 		'feedback', bCue, 'distractors', bCue);
 	
 	shw.Image(sStim(kPos).base, cOffset{kPos}, 'border', bFrame, 'window', 'stim');
@@ -84,12 +55,12 @@ end
 
 % frame (cue)
 shw.Blank('window', 'frame');
-shw.Rectangle(MWPI.Param('color','back'), szStimVA, cOffset{posCued}, ...
+shw.Rectangle(MWPI.Param('color','back'), szStimVA, cOffset{sParam.posCued}, ...
 	'border', true, 'window', 'frame');
 
 % retention period
-vClass = sParam.vClass(kRun, kBlock);
-stimV = MWPI.Stimulus(vClass, arrSeed(3), arrAbility(vClass), szStimPX, ...
+vClass = sParam.vClass;
+stimV = MWPI.Stimulus(vClass, sParam.seed(end), arrAbility(vClass), szStimPX, ...
 	'small_large', true);
 
 shw.Blank('window', 'retention');
@@ -106,11 +77,11 @@ shw.Blank('window', 'testYes');
 shw.Blank('window', 'testNo');
 
 % test texture
-kMatch = sParam.posMatch(kRun, kBlock);
+kMatch = sParam.posMatch;
 posMatch = cOffset{kMatch};
 posDistractors = cOffset(1:4 ~= kMatch);
 
-stimTest = sStim(posCued);
+stimTest = sStim(sParam.posCued);
 
 shw.Image(stimTest.base, posMatch, 'window', 'test');
 shw.Image(stimTest.yes,  posMatch, 'window', 'testYes');

@@ -6,6 +6,7 @@ classdef MWPI < PTB.Object
 % Syntax: mwpi = MWPI(<options>)
 %
 %           subfunctions:
+%				(Out of date, TODO: update)
 %               Start(<options>):   start the object
 %				Init:				set up the experiment
 %               End:                end the object
@@ -55,6 +56,7 @@ classdef MWPI < PTB.Object
 		p			= Param(varargin)
 		level		= Stairstep(res, sParam, kRun, levelMin, levelMax, varargin)
 		sStim		= Stimulus(class, seed, level, size, varargin)
+		arrSeed		= GenSeeds(varargin)
 	end
 	
 	% INSTANCE METHODS-------------------------------------------------%

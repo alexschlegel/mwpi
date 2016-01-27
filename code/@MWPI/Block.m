@@ -1,29 +1,26 @@
-function res = Block(mwpi, kRun, kBlock, varargin)
+function res = Block(mwpi, kBlock, sParam, varargin)
 % Block - do one MWPI block.
 %
 % Syntax: mwpi.Block(kRun, kBlock, <options>)
 %
 % In:
-%   kRun - the run number
 %   kBlock - the block number
+%	sParam - the parameter struct for this block (see CalcParams)
 %	<options>:
-%		sParam - (mwpi.sParam) alternate parameter struct to use (see
-%				 CalcParams)
+%		bProgress - (true) show progress indicator on the feedback screen
 %
-% Updated: 2015-08-18
+% Updated: 2016-01-27
 
-opt = ParseArgs(varargin, 'sParam', mwpi.sParam);
+opt = ParseArgs(varargin, 'bProgress', true);
 
 exp = mwpi.Experiment;
 strDomain	= conditional(mwpi.bPractice, 'practice', 'exp');
 fTAbs		= conditional(mwpi.bPractice, @PTB.Now, @() exp.Scanner.TR);
-% debugging
-tLast = 0;
 
 res.bCorrect = [];
-res.cClass = opt.sParam.cClass(kRun, kBlock);
-res.vClass = opt.sParam.vClass(kRun, kBlock);
-res.ucClass = opt.sParam.ucClass(kRun, kBlock);
+res.cClass = sParam.cClass;
+res.vClass = sParam.vClass;
+res.ucClass = sParam.ucClass;
 
 % whether to reset serial port and response variable
 bReset = true;
@@ -55,7 +52,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 	function tAbs = DoPrompt(~, ~)
 				
 		tAbs = fTAbs();
-		tLast = tAbs;
+%		tLast = tAbs;
 		
 % 		% debug
 % 		if mwpi.bPractice
@@ -87,8 +84,8 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 	function tAbs = DoRetention(tNow, tNext)
 				
 		tAbs = fTAbs();
-		tDiff = tAbs - tLast;
-		tLast = tAbs;
+%		tDiff = tAbs - tLast;
+%		tLast = tAbs;
 		
 % 		% debug
 % 		if mwpi.bPractice
@@ -184,8 +181,8 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 	function tAbs = DoTest(~, ~)
 		
 		tAbs = fTAbs();
-		tDiff = tAbs - tLast;
-		tLast = tAbs;
+%		tDiff = tAbs - tLast;
+%		tLast = tAbs;
 		
 % 		% debug
 % 		if mwpi.bPractice
@@ -205,7 +202,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 							%MWPI.Param(strDomain,'block','test','tBlankPost')
 						%]);
 					
-		posMatch = opt.sParam.posMatch(kRun,kBlock);
+		posMatch = sParam.posMatch;
 		
 		dirCorrect = switch2(posMatch, ...
 			1,	'up',		...
@@ -241,7 +238,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 	function tAbs = DoFeedback(~, ~)
 		
 		tAbs = fTAbs();
-		tDiff = tAbs - tLast;
+%		tDiff = tAbs - tLast;
 		
 % 		% debug
 % 		if mwpi.bPractice
@@ -300,8 +297,11 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		
 		% construct complete feedback string
 		
-		strProgressFeedback = ['Trials completed: ' num2str(kBlock) '/' ...
-				num2str(size(opt.sParam.cClass, 2))];
+		if opt.bProgress
+			strProgressFeedback = ['Trials completed: ' num2str(kBlock) '/' num2str(mwpi.nBlock)];
+		else
+			strProgressFeedback = '';
+		end
 		
 		if mwpi.bPractice
 			strFeedback = ['<color:' strColor '>' strCorrect '</color>\n' ...
@@ -313,7 +313,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		end
 		
 		% show feedback in an empty area of the screen
-		posMatch = opt.sParam.posMatch(kRun,kBlock);
+		posMatch = sParam.posMatch;
 		
 		vertOffset = MWPI.Param('text','vertOffset');
 		horzOffset = MWPI.Param('text','horzOffset');

@@ -10,8 +10,7 @@ function s = CalcParams(varargin)
 %   <options>:
 %       practice: [false] if true, this is a practice run.
 %
-% Out: the parameter struct (also saved to PTBIFO.mwpi.run.param):
-%		All fields are nRun x nBlock arrays unless otherwise indicated.
+% Out: an nRun x nBlock parameter struct (where nRun and nBlock depend on the 'practice' option):
 %
 %		Note that some fields are redundant for convenience. For instance,
 %		promptClass together with posCued and posUncued contain the
@@ -20,18 +19,22 @@ function s = CalcParams(varargin)
 %		For positional parameters, the following encoding is used:
 %		1 = up, 2 = right, 3 = down, 4 = left
 %
-%		s.promptClass:	(nRun x nBlock x 4 array) the stimulus 
-%						classes on the prompt screen, in clockwise order
-%						starting from the top (along 3rd dimension)
+%		s.promptClass:	4x1 array of the stimulus classes on the prompt screen, 
+%						in clockwise order starting from the top
 %		s.cClass:		class of cued prompt figure (working memory figure)
 %		s.vClass:		class of visual figure (during retention)
 %		s.ucClass:		class of uncued framed prompt figure
+%		s.seed:			5x1 array of RNG seeds to use to generate figures
+%						for each block. s.seed(1:4) are used for the prompt
+%						figures, clockwise from the top, and s.seed(5) is
+%						used for the visual figure. (The test figures use
+%						the same seed as the cued prompt figure.)
 %		s.posCued:		position of the cued prompt figure
 %		s.posUncued:	position of the uncued framed prompt figure
 %		s.posMatch:     position of the stimulus matching the cued prompt
 %						during the test
 
-% Updated: 2015-08-20
+% Updated: 2016-01-27
 
 opt = ParseArgs(varargin, 'practice', false);
 
@@ -67,12 +70,18 @@ posOthers = arrayfun(@(cued) randomize(setdiff((1:4)', cued)), s.posCued, 'uni',
 s.posUncued = cellfun(@(po) po(1), posOthers);
 for j = 1:nRun
 	for k = 1:nBlock
-		s.promptClass(j,k,posOthers{j,k}) = [s.ucClass(j,k); setdiff(arrClass, [s.cClass(j,k), s.ucClass(j,k)])];
-		s.promptClass(j,k,s.posCued(j,k)) = s.cClass(j,k);
+		s.promptClass{j,k}(posOthers{j,k},1) = [s.ucClass(j,k); setdiff(arrClass, [s.cClass(j,k), s.ucClass(j,k)])];
+		s.promptClass{j,k}(s.posCued(j,k),1) = s.cClass(j,k);
 	end
 end
 
 % which tests match cued prompt?
 s.posMatch = blockdesign([1,2,3,4], nBlock/4, nRun);
+
+% generate seedss
+s.seed = arrayfun(@(x) MWPI.GenSeeds, zeros(nRun, nBlock), 'uni', false);
+
+% convert from struct of arrays to struct array
+s = restruct(s);
 	
 end
