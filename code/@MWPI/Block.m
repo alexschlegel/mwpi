@@ -127,9 +127,9 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		while tTaskStart < tDur - tTask
 			
 			% set up fixation task
-			bGrow = randFrom([true, false]);
-			kCorrect = cell2mat(conditional(bGrow, kGrow, kShrink));
-			hTask = conditional(bGrow, mwpi.sTexture.retentionLg, mwpi.sTexture.retentionSm);			
+			resOne.bGrow = randFrom([true, false]);
+			kCorrect = cell2mat(conditional(resOne.bGrow, kGrow, kShrink));
+			hTask = conditional(resOne.bGrow, mwpi.sTexture.retentionLg, mwpi.sTexture.retentionSm);			
 			
 			cXFixation = {	hTask
 							mwpi.sTexture.retention
