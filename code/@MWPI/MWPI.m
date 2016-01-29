@@ -5,20 +5,36 @@ classdef MWPI < PTB.Object
 %
 % Syntax: mwpi = MWPI(<options>)
 %
-%           subfunctions:
-%				(Out of date, TODO: update)
-%               Start(<options>):   start the object
-%				Init:				set up the experiment
-%               End:                end the object
-%               PrepRun:            prepare an MWPI run
-%               Run:                execute an MWPI run
-%               DeleteRun:          delete data from a run (in case something bad happens)
+% Upon creation of the MWPI object, the user is asked whether this is a
+% practice session (psychophysics) or not (fMRI). A large amount of the
+% methods' functionality depends on this choice.
+%
+%         user-callable methods:
+%           Run:                execute an MWPI run (practice or fMRI)
+%           End:                close textures and end the object
+%			Param (static):		get an experiment parameter
+%
+%		  internal methods:
+%           Start:               start the object
+%			Init:				 set up the experiment
+%			CalcParams (static): generate a set of session-specific
+%								 counterbalanced parameters (stimulus
+%								 classes, positions, etc.)
+%			GenSeeds (static):	 utility function to generate some rng seeds
+%			Stimulus (static):	 generate a visual stimulus, along with info
+%			PrepTextures:		 prepare the off-screen textures for a new
+%								 block
+%			Block:				 run one block (i.e. a trial)
+%			Instructions:		 show an instruction sequence, including a
+%								 demo block with on-screen hints
+%			Practice:			 do a practice run
+%			FmriRun:			 do an fMRI run
 %
 % In:
 %   <options>:
 %       debug:      (0) the debug level
 %
-% Updated: 2015-06-24
+% Updated: 2016-01-29
 
     % PUBLIC PROPERTIES-------------------------------------------------%
     properties
@@ -51,12 +67,10 @@ classdef MWPI < PTB.Object
     
     % STATIC METHODS----------------------------------------------------%
 	methods (Static)
-		s			= CalcParams(varargin)
-		threshold	= CalcThreshold(res, sParam, kRun)
-		p			= Param(varargin)
-		level		= Stairstep(res, sParam, kRun, levelMin, levelMax, varargin)
-		sStim		= Stimulus(class, seed, level, size, varargin)
-		arrSeed		= GenSeeds(varargin)
+		s				= CalcParams(varargin)
+		p				= Param(varargin)
+		[sStim, ifo]	= Stimulus(class, seed, level, size, varargin)
+		arrSeed			= GenSeeds(varargin)
 	end
 	
 	% INSTANCE METHODS-------------------------------------------------%

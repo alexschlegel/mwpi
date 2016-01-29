@@ -1,4 +1,4 @@
-function sStim = Stimulus(class, seed, level, size, varargin)
+function [sStim, ifo] = Stimulus(class, seed, level, size, varargin)
 % MWPI.Stimulus
 % 
 % Description: generate a single MWPI Stimulus
@@ -36,6 +36,9 @@ function sStim = Stimulus(class, seed, level, size, varargin)
 % Out:
 %	   sStim:	 A struct containing the base stimulus in sStim.base, and
 %				 any variants in other fields as specified by the options.
+%		 ifo:	 A struct, with the same field names as sStim, containing
+%				 information about each stimulus generated (the ifo.param
+%				 value returned from the generator method)
 %
 % Updated: 2015-10-17
 
@@ -50,14 +53,7 @@ if isempty(seed)
 	seed = randseed2;
 end
 
-sStim = struct(...
-	'base',			[], ...
-	'yes',			[], ...
-	'no',			[], ...
-	'distractors',	[], ...
-	'small',		[], ...
-	'large',		[]  ...
-	);
+[sStim, ifo] = deal(dealstruct('base', 'yes', 'no', 'distractors', 'small',	'large', []));
 
 colBack = MWPI.Param('color','back');
 colStim = opt.base_color;
@@ -89,7 +85,8 @@ generator = fGenerator(...
 	'background', colBack, ...
 	'foreground', colStim ...
 	);
-sStim.base = generator.generate;
+[sStim.base, baseIfo] = generator.generate;
+ifo.base = baseIfo.param;
 
 if opt.feedback
 	generatorYes = fGenerator(...
@@ -99,7 +96,8 @@ if opt.feedback
 		'background', colBack, ...
 		'foreground', colYes ...
 		);
-	sStim.yes = generatorYes.generate;
+	[sStim.yes, yesIfo] = generatorYes.generate;
+	ifo.yes = yesIfo.param;
 	
 	generatorNo = fGenerator(...
 		'd', d, ...
@@ -108,11 +106,13 @@ if opt.feedback
 		'background', colBack, ...
 		'foreground', colNo ...
 		);
-	sStim.no = generatorNo.generate;
+	[sStim.no, noIfo] = generatorNo.generate;
+	ifo.no = noIfo.param;
 end
 
 if opt.distractors
-	sStim.distractors = generator.distractor(3);
+	[sStim.distractors, distractorsIfo] = generator.distractor(3);
+	ifo.distractors = vertcat(distractorsIfo.param);
 end
 
 if opt.small_large
@@ -126,7 +126,8 @@ if opt.small_large
 		'background', colBack, ...
 		'foreground', colStim ...
 		);
-	sStim.small = generatorSmall.generate;
+	[sStim.small, smallIfo] = generatorSmall.generate;
+	ifo.small = smallIfo.param;
 	
 	generatorLarge = fGenerator(...
 		'd', d, ...
@@ -135,7 +136,8 @@ if opt.small_large
 		'background', colBack, ...
 		'foreground', colStim ...
 		);
-	sStim.large = generatorLarge.generate;
+	[sStim.large, largeIfo] = generatorLarge.generate;
+	ifo.large = largeIfo.param;
 end
 
 end
