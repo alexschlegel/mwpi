@@ -45,6 +45,8 @@ if ~mwpi.bPractice
 		if isempty(ability)
 			warning('no threshold ability calculated, using default start levels');
 			ability = MWPI.Param('exp', 'startLevel');
+		else
+			exp.AddLog('Set start level based on subject''s saved ability');
 		end
 		
 		mwpi.currD = ability;

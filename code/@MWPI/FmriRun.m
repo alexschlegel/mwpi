@@ -187,6 +187,28 @@ if ~isempty(sRun.res)
 		exp.Info.Set('mwpi','currReward',mwpi_g.reward);
 		exp.Info.AddLog('Results saved.');
 		
+		% append trial result history to subject info
+		thisHistory.task   = vertcat(sRun.res.cClass);
+		thisHistory.d      = vertcat(sRun.res.d);
+		thisHistory.result = vertcat(sRun.res.bCorrect);
+		
+		sHistory = exp.Subject.Get('history');
+		if isempty(sHistory)
+			exp.Subject.Set('history', thisHistory);
+		else
+			% append to existing
+			try
+				sHistory.task	= [sHistory.task;	thisHistory.task];
+				sHistory.d		= [sHistory.d;		thisHistory.d];
+				sHistory.result = [sHistory.result;	thisHistory.result];
+				assert(numel(sHistory.task) == numel(sHistory.d) && numel(sHistory.d) == numel(sHistory.result));
+				exp.Subject.Set('history', sHistory);
+				exp.Subject.AddLog('Trial history appended to subject info.');
+			catch
+				warning('Could not append data - saving to subject info as ''temp_history''. Please resolve manually.');
+				exp.Subject.Set('temp_history', thisHistory);
+			end
+		end
 	end
 end
 end

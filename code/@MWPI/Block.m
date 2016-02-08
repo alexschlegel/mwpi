@@ -281,13 +281,14 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		% take fixation task into account				
 		fRewardFixation = MWPI.Param('reward','fFixation');
 		res.dRewardFixation = max([fRewardFixation(nFixYes, nFixNo), baseReward - rewardSubtotal]);
+		bFixationFeedback = (nFixNo > 0);
 		
 		res.rewardPost = rewardSubtotal + res.dRewardFixation;
 		mwpi.reward = res.rewardPost;
 		
-		if res.dRewardFixation ~= 0
+		if bFixationFeedback
 			strFixationFeedback = ['<color:' strColNo '>' num2str(nFixNo) plural(nFixNo,' cue{,s} missed')];
-			if ~mwpi.bPractice
+			if ~mwpi.bPractice && res.dRewardFixation ~= 0
 				strFixationFeedback = [strFixationFeedback ' (' StringMoney(res.dRewardFixation,'sign',true) ')'];
 			end
 			strFixationFeedback = [strFixationFeedback '</color>\n'];

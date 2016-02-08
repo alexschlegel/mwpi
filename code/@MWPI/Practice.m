@@ -78,6 +78,43 @@ exp.Info.AddLog('Results saved.');
 exp.Subject.Set('ability', sInfo.estimate.ability);
 exp.Subject.AddLog('Ability estimate saved to subject info.');
 
+% set or append trial history in subject info
+thisHistory.task   = vertcat(sInfo.history.task{:});
+thisHistory.d      = vertcat(sInfo.history.d{:});
+thisHistory.result = vertcat(sInfo.history.result{:});
+
+sHistory = exp.Subject.Get('history');
+if ~isempty(sHistory)
+	WaitSecs(0.5); % allow other log messages to display
+	pmtRes = exp.Prompt.Ask('Trial history exists for this subject. What to do?', ...
+		'mode', 'command_window', 'choice', {'append', 'overwrite_old', 'discard_new'});
+	
+	switch pmtRes
+		case 'append'
+			% append current results to existing.
+			try
+				sHistory.task	= [sHistory.task;	thisHistory.task];
+				sHistory.d		= [sHistory.d;		thisHistory.d];
+				sHistory.result = [sHistory.result;	thisHistory.result];
+				assert(numel(sHistory.task) == numel(sHistory.d) && numel(sHistory.d) == numel(sHistory.result));
+				exp.Subject.Set('history', sHistory);
+				exp.Subject.AddLog('Trial history appended to subject info.');
+			catch
+				warning('Could not append data - saving to subject info as ''temp_history''. Please resolve manually.');
+				exp.Subject.Set('temp_history', thisHistory);
+			end
+		case 'overwrite_old'
+			% overwrite old results with new
+			exp.Subject.Set('history', thisHistory);
+			exp.Subject.AddLog('Overwrote trial history in subject info.');
+		case 'discard_new'
+			% do nothing
+	end
+else
+	exp.Subject.Set('history', thisHistory);
+	exp.Subject.AddLog('Trial history saved to subject info.');
+end
+
 %--------------------------------------------------------------------------%
 	function sTaskParam = GenParamStruct(kTask, ~, kProbeTotal)
 		% generate a parameter struct for a random block of type kTask

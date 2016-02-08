@@ -52,7 +52,7 @@ end
 function P = InitializeP
 	P = struct;
 	
-	global strDirBase;
+	%global strDirBase;
     
 	%--stimulus parameters-------------------------------------
     P.stim = struct( ...
@@ -220,9 +220,17 @@ function P = InitializeP
     P.reward.penaltyPerBlock	= expectedTotalPenalty / nExpectedIncorrect;
 	P.reward.fFixation			= @(nYes, nNo) -P.reward.fixationPenalty * nNo;
 
-	%--file parameters--------------------------------------------
-	P.path = struct(...
-		'arrow',	PathUnsplit(DirAppend(strDirBase, 'img'),'arrow','bmp') ...
+	%--similarity test parameters-------------------------------------
+	% all times in seconds
+	P.simtest = struct (...
+		'duration',	500, ...
+		'rest',		1, ...
+		'colRank',	'white' ...
 	);
+	
+	%--file parameters--------------------------------------------
+% 	P.path = struct(...
+% 		'arrow',	PathUnsplit(DirAppend(strDirBase, 'img'),'arrow','bmp') ...
+% 	);
 end
 
