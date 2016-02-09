@@ -12,6 +12,11 @@ exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
 exp.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
 exp.Input.Set('shrink',			MWPI.Param('key','shrink'));
 exp.Input.Set('grow',			MWPI.Param('key','grow'));
+if ~mwpi.bPractice
+	exp.Input.Key.Set('abort',	MWPI.Param('key','abort'));
+else
+	exp.Input.Set('abort', MWPI.Param('key','abort'));		
+end
 	
 % read in the arrow image
 % bArrow = imread(MWPI.Param('path','arrow'));

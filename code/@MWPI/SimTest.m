@@ -1,29 +1,24 @@
 function SimTest(mwpi, varargin)
 % SimTest - do a similarity test. This is an assessment of the subject's
-% perception of how similar the four stimulus classes are.
+% perception of how similar the four stimulus classes are. Ends after the next
+% trial that is a multiple of 4 the escape key is pressed on the keyboard 
+% during a trial (so that the classes tested are balanced).
 %
 % Syntax: mwpi.SimTest(<options>)
 %
 % In:
 %	<options>:
-%		duration:	(specified in MWPI.Param('simtest','duration')) the
-%					length of time to show the similarity test, in seconds
-%
 %		d:			(calculated based on subject's trial history) a 4x1 array
 %					of d values to use to generate stimuli from each class.
 %
 % Updated: 2016-02-08
-
-tStart = PTB.Now;
 
 ListenChar(2);
 
 exp = mwpi.Experiment;
 
 % figure out the parameters
-opt = ParseArgs(varargin, ...
-					'duration',		MWPI.Param('simtest', 'duration'), ...
-					'd',			[]);
+opt = ParseArgs(varargin, 'd',	[]);
 
 if ~isempty(opt.d)
 	if isa(opt.d, 'float') && numel(opt.d) == 4 && max(opt.d) <= 1 && min(opt.d) >= 0
@@ -54,8 +49,6 @@ end
 exp.Info.Set('mwpi', 'simD', opt.d);
 
 % now do the similarity tests.
-msDuration = 1000 * opt.duration;
-tEnd = tStart + msDuration;
 secsWait = MWPI.Param('simtest', 'rest');
 
 szStimVA  = MWPI.Param('stim', 'size');
@@ -72,7 +65,8 @@ arrKey = cell2mat(cKey);
 
 kTrial = 0;
 
-while PTB.Now < tEnd
+bEnd = false;
+while ~bEnd
 	% do a round of 4 similarity trials
 	classOrder = randomize(1:4);
 	for k = 1:4
@@ -85,7 +79,13 @@ while PTB.Now < tEnd
 		WaitSecs(secsWait);
 		
 		exp.AddLog(['Starting trial ' num2str(kTrial) ]);
+		if ~mwpi.bPractice
+			exp.Scanner.StartScan;
+		end
 		thisRes = SimTrial(kClass);
+		if ~mwpi.bPractice
+			exp.Scanner.StopScan;
+		end
 		
 		% save results
 		sRes = exp.Info.Get('mwpi', 'simRes');
@@ -156,21 +156,32 @@ ListenChar(0);
 			end
 						
 			% now wait for them to press a button
-			bPressed = false;
-			while ~bPressed
-				[bPressed, ~, ~, kButton] = exp.Input.DownOnce('responselrud');
-			end
-			kButton = kButton(1);
-			indPressed = find(kButton == arrKey);
-			
-			if ranking(indPressed) ~= 0
-				ranking(indPressed) = 0;
+			if mwpi.bPractice
+				keyboard = exp.Input;
 			else
-				ranking(indPressed) = min(setdiff(1:4, ranking));
+				keyboard = exp.Input.Key;
+			end
+			[~, ~, kButton, bAbort] = exp.Input.WaitDownOnce('responselrud', ...
+				'fabort', @() keyboard.DownOnce('abort'));
+			
+			if bAbort
+				bEnd = true;
+			else
+				kButton = kButton(1);
+				indPressed = find(kButton == arrKey);
+				
+				if ranking(indPressed) ~= 0
+					ranking(indPressed) = 0;
+				else
+					ranking(indPressed) = min(setdiff(1:4, ranking));
+				end
 			end
 		end
 		res.ranking = ranking;
-		res.rankingByClass = res.sampleClass(res.ranking);
+		res.classesInOrderOfSimilarity = res.choiceClass(res.ranking);
+		% invert permutation for alternate format
+		res.similarityRankingOfClass = zeros(4,1);
+		res.similarityRankingOfClass(res.classesInOrderOfSimilarity) = 1:4;
 		WaitSecs(0.5);
 	end
 end
