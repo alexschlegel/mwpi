@@ -29,6 +29,9 @@ if ~isempty(opt.d)
 else
 	% use saved trials to make a psychometric curve
 	sHistory = exp.Subject.Get('history');
+    if isempty(sHistory)
+        sHistory = dealstruct('d', 'result', 'task', []);
+    end
 	
 	% dummy function for subject.assess
 	fDummy = @(d,p) true;

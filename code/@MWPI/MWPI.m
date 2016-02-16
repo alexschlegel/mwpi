@@ -97,7 +97,7 @@ classdef MWPI < PTB.Object
             opt.context = conditional(opt.practice,'psychophysics','fmri');
             opt.tr = MWPI.Param('trTime');
             opt.input_scheme = 'lrud';
-            %opt.disable_key = false;
+            opt.disable_key = false;
             opt.background = MWPI.Param('color','back');
             opt.text_size = MWPI.Param('text','size');
             opt.text_family = MWPI.Param('text','family');
