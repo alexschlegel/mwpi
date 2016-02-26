@@ -54,7 +54,7 @@ exp.Info.Set('mwpi', 'simD', opt.d);
 % now do the similarity tests.
 secsWait = MWPI.Param('simtest', 'rest');
 
-szStimVA  = MWPI.Param('stim', 'size');
+szStimVA  = 0.95 * MWPI.Param('stim', 'size'); % so they don't run into each other
 szStim  = round(exp.Window.va2px(szStimVA));
 
 colRank = MWPI.Param('simtest', 'colRank');
@@ -129,7 +129,7 @@ ListenChar(0);
 		cChoiceStim = cellfun(@(s) s.base, cChoiceStim, 'uni', false);
 		
 		% show stimuli		
-		stimOffset  = MWPI.Param('stim', 'offset') * 1.2;
+		stimOffset  = MWPI.Param('stim', 'offset');
 		fPos =  @(offset) {[0,-offset]; [offset, 0]; [0, offset]; [-offset, 0]};
 		cStimPos = fPos(stimOffset);
 		
