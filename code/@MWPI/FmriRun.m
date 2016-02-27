@@ -205,7 +205,7 @@ if ~isempty(sRun.res)
 				exp.Subject.Set('history', sHistory);
 				exp.Subject.AddLog('Trial history appended to subject info.');
 			catch
-				warning('Could not append data - saving to subject info as ''temp_history''. Please resolve manually.');
+				warning('Could not append history - saving to subject info as ''temp_history''. Please resolve manually.');
 				exp.Subject.Set('temp_history', thisHistory);
 			end
 		end

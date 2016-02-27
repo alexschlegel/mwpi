@@ -65,6 +65,14 @@ arrKey = cell2mat(cKey);
 
 kTrial = 0;
 
+% open textures for use during trials
+if isempty(exp.Window.Get('current'));
+	exp.Window.OpenTexture('current');
+end
+if isempty(exp.Window.Get('original'));
+	exp.Window.OpenTexture('original');
+end
+
 bEnd = false;
 while ~bEnd
 	% do a round of 4 similarity trials
@@ -102,6 +110,9 @@ end
 exp.Show.Blank;
 exp.Window.Flip;
 
+exp.Window.CloseTexture('current');
+exp.Window.CloseTexture('original');
+
 ListenChar(0);
 
 %---------------------------------------------------------------------%
@@ -138,19 +149,45 @@ ListenChar(0);
 			exp.Serial.Clear;
 		end
 		
+		% stores the rank of each figure, in order of position
 		% let zero indicate no rank yet
 		ranking = zeros(4,1);
 		
+		% store stimuli in 'current' and 'original' textures
+		exp.Show.Blank('window', 'original');
+		exp.Show.Image(sampleStim, 'window', 'original');
+		cellfun(@(im,offset) exp.Show.Image(im, offset, 'window', 'original'), ...
+			cChoiceStim, cStimPos);
+
+		% pause scheduler
+		exp.Scheduler.Pause;
+		
+		% variables for fast rank updating
+		bAdded = false;
+		posAdded = 0;
+		
+		% rank selection loop (ends when figures have been ranked)
 		while true
-			exp.Show.Image(sampleStim);
-			cellfun(@(im,offset) exp.Show.Image(im, offset), cChoiceStim, cStimPos);
+			% update the rankings on screen
+			fStrRank = @(rank) ['<color:' colRank '>' num2str(rank) '</color>'];
 			
-			ranked = find(ranking);
-			% show current rankings
-			arrayfun(@(pos,rank) exp.Show.Text(['<color:' colRank '>' num2str(rank) ...
-				'</color>'], cNumPos{pos}), ranked, ranking(ranked), 'uni', false);
+			if bAdded
+				exp.Show.Text(fStrRank(ranking(posAdded)), cNumPos{posAdded}, 'window', 'current');
+				exp.Show.Texture('current');
+			else
+				exp.Show.Texture('original', 'window', 'current');
+				ranked = find(ranking);
+				arrayfun(@(pos,rank) exp.Show.Text(fStrRank(rank), cNumPos{pos}, 'window', 'current'), ...
+					ranked, ranking(ranked), 'uni', false);
+				exp.Show.Texture('current');
+			end
+			
 			
 			exp.Window.Flip;
+			
+			% wait so the log messages can print
+			exp.Scheduler.Wait(PTB.Scheduler.PRIORITY_LOW, PTB.Now + 200);
+			
 			if all(ranking)
 				break;
 			end
@@ -161,22 +198,41 @@ ListenChar(0);
 			else
 				keyboard = exp.Input.Key;
 			end
-			[~, ~, kButton, bAbort] = exp.Input.WaitDownOnce('responselrud', ...
-				'fabort', @() keyboard.DownOnce('abort'));
-			
-			if bAbort
-				bEnd = true;
-			else
-				kButton = kButton(1);
-				indPressed = find(kButton == arrKey);
-				
-				if ranking(indPressed) ~= 0
-					ranking(indPressed) = 0;
-				else
-					ranking(indPressed) = min(setdiff(1:4, ranking));
+% 			[~, ~, kButton, bAbort] = exp.Input.WaitDownOnce('responselrud', ...
+% 				'fabort', @() keyboard.DownOnce('abort'), ...
+% 				'wait_priority', PTB.Scheduler.PRIORITY_CRITICAL);
+
+			kButton = [];
+			while true
+				[bDown, ~, ~, kButton] = exp.Input.DownOnce('responselrud');
+				bAbortDown = keyboard.DownOnce('abort');
+				if bAbortDown
+					bEnd = true;
 				end
+				
+				if bDown
+					break;
+				end
+				WaitSecs(0.01);
 			end
+			
+			
+			kButton = kButton(1);
+			indPressed = find(kButton == arrKey);
+			
+			if ranking(indPressed) ~= 0
+				ranking(indPressed) = 0;
+				bAdded = false;
+			else
+				ranking(indPressed) = min(setdiff(1:4, ranking));
+				bAdded = true;
+				posAdded = indPressed;
+			end
+			
 		end
+		
+		exp.Scheduler.Resume;
+		
 		res.ranking = ranking;
 		res.classesInOrderOfSimilarity = res.choiceClass(res.ranking);
 		% invert permutation for alternate format
