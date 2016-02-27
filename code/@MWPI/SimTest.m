@@ -76,6 +76,15 @@ if isempty(exp.Window.Get('original'));
 	exp.Window.OpenTexture('original');
 end
 
+
+% offset constants
+stimOffset  = MWPI.Param('stim', 'offset');
+fPos =  @(offset) {[0,-offset]; [offset, 0]; [0, offset]; [-offset, 0]};
+cStimPos = fPos(stimOffset);
+		
+numOffset = stimOffset;
+cNumPos = fPos(numOffset);
+
 bEnd = false;
 while ~bEnd
 	% do a round of 4 similarity trials
@@ -139,15 +148,7 @@ ListenChar(0);
 			res.choiceClass, res.choiceSeed, res.choiceD, 'uni', false);
 		cChoiceStim = cellfun(@(s) s.base, cChoiceStim, 'uni', false);
 		
-		% show stimuli		
-		stimOffset  = MWPI.Param('stim', 'offset');
-		fPos =  @(offset) {[0,-offset]; [offset, 0]; [0, offset]; [-offset, 0]};
-		cStimPos = fPos(stimOffset);
-		
-		% now let them rank them
-		numOffset = stimOffset;
-		cNumPos = fPos(numOffset);
-		
+		% Clear serial port
 		if ~mwpi.bPractice
 			exp.Serial.Clear;
 		end
