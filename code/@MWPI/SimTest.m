@@ -17,7 +17,7 @@ ListenChar(2);
 
 exp = mwpi.Experiment;
 
-% figure out the parameters
+% figure out the parameters--------------------------------
 opt = ParseArgs(varargin, 'd',	[]);
 
 if ~isempty(opt.d)
@@ -34,8 +34,7 @@ else
     end
 	
 	% dummy function for subject.assess
-	fDummy = @(d,p) true;
-	
+	fDummy = @(d,p) true;	
 	curve		= MWPI.Param('curve');
 
 	assess = subject.assess(repmat({fDummy},4,1), ...
@@ -51,8 +50,8 @@ else
 end
 exp.Info.Set('mwpi', 'simD', opt.d);
 
-% now do the similarity tests.
-secsWait = MWPI.Param('simtest', 'rest');
+
+% prepare for tests ---------------------------------------
 
 szStimVA  = 0.95 * MWPI.Param('stim', 'size'); % so they don't run into each other
 szStim  = round(exp.Window.va2px(szStimVA));
@@ -85,6 +84,16 @@ cStimPos = fPos(stimOffset);
 numOffset = stimOffset;
 cNumPos = fPos(numOffset);
 
+
+% show instructions-----------------------------------------
+
+exp.Show.Instructions(['In the following trials, a sample stimulus will appear ' ...
+	'in the center, with four more stimuli around it. Using the button box, rank ' ...
+	'each surrounding stimulus according to how perceptually similar it is to the ' ...
+	'sample stimulus (most similar first, least similar last).']);
+
+% now do the similarity tests --------------------------------
+secsWait = MWPI.Param('simtest', 'rest');
 bEnd = false;
 while ~bEnd
 	% do a round of 4 similarity trials
@@ -115,6 +124,7 @@ while ~bEnd
 			sRes(end+1) = thisRes;
 		end
 		exp.Info.Set('mwpi', 'simRes', sRes);
+		exp.Info.Save;
 		exp.AddLog(['Saved trial ' num2str(kTrial)]);
 	end
 end
