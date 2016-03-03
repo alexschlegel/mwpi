@@ -93,7 +93,6 @@ exp.Show.Instructions(['<size:0.8>In the following trials, a sample stimulus wil
 	'sample stimulus (most similar first, least similar last).</size>']);
 
 % now do the similarity tests --------------------------------
-secsWait = MWPI.Param('simtest', 'rest');
 bEnd = false;
 while ~bEnd
 	% do a round of 4 similarity trials
@@ -102,10 +101,9 @@ while ~bEnd
 		kClass = classOrder(k);
 		kTrial = kTrial + 1;
 		
-		% show blank for a rest period
+		% show blank
 		exp.Show.Blank;
 		exp.Window.Flip;
-		WaitSecs(secsWait);
 		
 		exp.AddLog(['Starting trial ' num2str(kTrial) ]);
 		if ~mwpi.bPractice

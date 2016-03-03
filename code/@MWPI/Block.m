@@ -63,12 +63,10 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 % 		% end debug
 
 		cX = {	mwpi.sTexture.stim
-				{'Blank','fixation',false}
 				mwpi.sTexture.frame
 			};
 		
-		tShow = [	num2cell(cumsum( [	MWPI.Param(strDomain,'block','prompt','tStim')
-										MWPI.Param(strDomain,'block','prompt','tBlank')]))
+		tShow = [	{MWPI.Param(strDomain,'block','prompt','tStim')}
 					{@(tNow) deal(false, true)} % make sure it ends ahead of time
 				];
 		
