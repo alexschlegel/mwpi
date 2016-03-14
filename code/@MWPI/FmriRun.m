@@ -14,7 +14,8 @@ function FmriRun(mwpi, kRun)
 global mwpi_g;
 mwpi_g = mwpi;
 global sRun;
-sRun = dealstruct('res','tStart','tEnd','tSequence','bAbort',[]);
+sRun = dealstruct('res','tStart','tEnd','tSequence','bAbort', 'fracCorrect', ...
+	'meanFracFixationCorrect', []);
 global finished;
 finished = false; %#ok<NASGU>
 global kRun_g;
@@ -70,9 +71,15 @@ exp.Scanner.StartScan(tRun);
 	% scanner ends
 	exp.Scanner.StopScan;
 	
+	
+% get some statistics
+sRun.fracCorrect = mean([sRun.res.bCorrect]);
+sRun.meanFracFixationCorrect = mean([sRun.res.fracFixationCorrect]);
 
 % finish up
 exp.AddLog(['Run ' num2str(kRun) ' complete']);
+exp.AddLog(['Test accuracy: ' num2str(round(100 * sRun.fracCorrect)) '%']);
+exp.AddLog(['Average fixation accuracy per trial: ' num2str(round(100 * sRun.meanFracFixationCorrect)) '%']);
 
 finished = true;
 clear cleanupObj;

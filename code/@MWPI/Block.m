@@ -153,8 +153,10 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 			
 			% record results
 			if isempty(resOne.bCorrect) || ~resOne.bCorrect{1}
+				resOne.bCorrect = false;
 				nFixNo = nFixNo + 1;
 			else
+				resOne.bCorrect = true;
 				nFixYes = nFixYes + 1;
 			end
 			
@@ -170,10 +172,11 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		% make sure serial port gets flushed again
 		bReset = true;
 		
-		% show a log message
-		pctCorrect = round(100 * (nFixYes / (nFixYes + nFixNo)));
+		% save percent correct and show a log message
+		res.fracFixationCorrect = (nFixYes / (nFixYes + nFixNo));
+		pctFixationCorrect = round(100 * res.fracFixationCorrect);
 		exp.AddLog(['fixations correct: ' num2str(nFixYes) '/' num2str(nFixYes + nFixNo) ...
-			' (' num2str(pctCorrect) '%)']);
+			' (' num2str(pctFixationCorrect) '%)']);
 	end
 %----------------------------------------------------------------------%
 	function tAbs = DoTest(~, ~)
@@ -229,6 +232,8 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		
 		if numel(res.test.bCorrect) > 0
 			res.bCorrect = res.test.bCorrect{1};
+		else
+			res.bCorrect = false;
 		end
 		
 	end

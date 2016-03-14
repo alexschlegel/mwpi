@@ -10,7 +10,7 @@ function ifo = PrepTextures(mwpi, sParam, d, arrAbility)
 %				'testYes':		test in color indicating success
 %				'testNo':		test in color indicating failure
 %
-%	Syntax: mwpi.PrepTextures(kRun, kBlock)
+%	Syntax: mwpi.PrepTextures(mwpi, sParam, d, arrAbility)
 %
 %	In:	sParam:		the parameter struct for this block (see MWPI.CalcParams)
 %		d:			the difficulty of the wm / test stimulus for this block
