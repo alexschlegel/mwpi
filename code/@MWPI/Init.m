@@ -8,6 +8,13 @@ function Init(mwpi)
 exp = mwpi.Experiment;
 
 % define keys
+
+% hack to get the other 4-button box to work
+stateRight = exp.Input.Get('down');
+stateDown = exp.Input.Get('right');
+exp.Input.Set('right', stateRight);
+exp.Input.Set('down', stateDown);
+
 exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
 exp.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
 exp.Input.Set('shrink',			MWPI.Param('key','shrink'));
