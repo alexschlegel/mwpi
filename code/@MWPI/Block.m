@@ -232,8 +232,6 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 		
 		if numel(res.test.bCorrect) > 0
 			res.bCorrect = res.test.bCorrect{1};
-		else
-			res.bCorrect = false;
 		end
 		
 	end
