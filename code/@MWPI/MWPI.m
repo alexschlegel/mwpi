@@ -110,7 +110,7 @@ classdef MWPI < PTB.Object
             mwpi.Start;
             
             % initialize experiment (sets reward and sParam)
-            mwpi.Init;           
+            mwpi.Init(opt.debug);           
                       
         end
         %-----------------------------------------------------------%

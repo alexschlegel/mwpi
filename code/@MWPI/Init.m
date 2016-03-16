@@ -1,7 +1,10 @@
-function Init(mwpi)
+function Init(mwpi, debug)
 % Init - set up the mwpi experiment
 %
-% Syntax: mwpi.Init;
+% Syntax: mwpi.Init(debug);
+%
+% In:
+%   debug: the debug level
 %
 % Updated: 2015-08-10
 
@@ -9,11 +12,13 @@ exp = mwpi.Experiment;
 
 % define keys
 
-% hack to get the other 4-button box to work
-stateRight = exp.Input.Get('down');
-stateDown = exp.Input.Get('right');
-exp.Input.Set('right', stateRight);
-exp.Input.Set('down', stateDown);
+% hack to get the other 4-button box to work (switch down and right buttons)
+if isa(exp.Input, 'PTB.Device.Input.ButtonBox') && debug == 0
+    stateRight = exp.Input.Get('down');
+    stateDown = exp.Input.Get('right');
+    exp.Input.Set('right', stateRight);
+    exp.Input.Set('down', stateDown);
+end
 
 exp.Input.Set('responseud',		MWPI.Param('key','responseud'));
 exp.Input.Set('responselrud',	MWPI.Param('key','responselrud'));
