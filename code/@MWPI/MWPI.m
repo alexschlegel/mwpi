@@ -10,11 +10,12 @@ classdef MWPI < PTB.Object
 % methods' functionality depends on this choice.
 %
 %         user-callable methods:
-%           Run:                execute an MWPI run (practice or fMRI)
-%			SimTest:			execute the similarity test (to be used
-%								during anatomical scans)
-%           End:                close textures and end the object
-%			Param (static):		get an experiment parameter
+%           Run:                	execute an MWPI run (practice or fMRI)
+%			SimTest:				execute the similarity test (to be used
+%									during anatomical scans)
+%           End:                	close textures and end the object
+%			Param (static):			get an experiment parameter
+%           CalcSimMatrix (static):	calculate an empirical similarity matrix based on the SimTest results
 %
 %		  internal methods:
 %           Start:               start the object
