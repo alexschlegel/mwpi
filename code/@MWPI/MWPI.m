@@ -36,7 +36,7 @@ classdef MWPI < PTB.Object
 %   <options>:
 %       debug:      (0) the debug level
 %
-% Updated: 2016-01-29
+% Updated: 2016-03-16
 
     % PUBLIC PROPERTIES-------------------------------------------------%
     properties
@@ -70,6 +70,7 @@ classdef MWPI < PTB.Object
     % STATIC METHODS----------------------------------------------------%
 	methods (Static)
 		s				= CalcParams(varargin)
+		sm				= CalcSimMatrix(res)
 		p				= Param(varargin)
 		[sStim, ifo]	= Stimulus(class, seed, level, size, varargin)
 		arrSeed			= GenSeeds(varargin)
