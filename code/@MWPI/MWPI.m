@@ -10,11 +10,12 @@ classdef MWPI < PTB.Object
 % methods' functionality depends on this choice.
 %
 %         user-callable methods:
-%           Run:                execute an MWPI run (practice or fMRI)
-%			SimTest:			execute the similarity test (to be used
-%								during anatomical scans)
-%           End:                close textures and end the object
-%			Param (static):		get an experiment parameter
+%           Run:                	execute an MWPI run (practice or fMRI)
+%			SimTest:				execute the similarity test (to be used
+%									during anatomical scans)
+%           End:                	close textures and end the object
+%			Param (static):			get an experiment parameter
+%           CalcSimMatrix (static):	calculate an empirical similarity matrix based on the SimTest results
 %
 %		  internal methods:
 %           Start:               start the object
@@ -36,7 +37,7 @@ classdef MWPI < PTB.Object
 %   <options>:
 %       debug:      (0) the debug level
 %
-% Updated: 2016-01-29
+% Updated: 2016-03-16
 
     % PUBLIC PROPERTIES-------------------------------------------------%
     properties
@@ -70,6 +71,7 @@ classdef MWPI < PTB.Object
     % STATIC METHODS----------------------------------------------------%
 	methods (Static)
 		s				= CalcParams(varargin)
+		sm				= CalcSimMatrix(res)
 		p				= Param(varargin)
 		[sStim, ifo]	= Stimulus(class, seed, level, size, varargin)
 		arrSeed			= GenSeeds(varargin)
@@ -110,7 +112,7 @@ classdef MWPI < PTB.Object
             mwpi.Start;
             
             % initialize experiment (sets reward and sParam)
-            mwpi.Init;           
+            mwpi.Init(opt.debug);           
                       
         end
         %-----------------------------------------------------------%
