@@ -357,7 +357,7 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
         % flush serial port once (and reset bResponse)
 		if bReset
 			if ~mwpi.bPractice
-				exp.Serial.Clear;
+				exp.Input.State;
 			end
 			bResponse = false;
             bReset = false;

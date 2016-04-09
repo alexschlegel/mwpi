@@ -156,9 +156,9 @@ ListenChar(0);
 			res.choiceClass, res.choiceSeed, res.choiceD, 'uni', false);
 		cChoiceStim = cellfun(@(s) s.base, cChoiceStim, 'uni', false);
 		
-		% Clear serial port
+		% Clear buttonbox entries in serial port
 		if ~mwpi.bPractice
-			exp.Serial.Clear;
+			exp.Input.State;
 		end
 		
 		% stores the rank of each figure, in order of position
