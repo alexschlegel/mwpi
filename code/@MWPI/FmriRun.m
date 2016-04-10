@@ -192,13 +192,7 @@ if ~isempty(sRun.res)
 		exp.Info.Set('mwpi','dm',mwpi_g.dm);
 		exp.Info.Set('mwpi','dmStat', mwpi_g.dm.CompareTasks());
 		exp.Info.Set('mwpi','currD', mwpi_g.currD);
-		exp.Info.Set('mwpi','currReward',mwpi_g.reward);
-        bSuccess = exp.Info.Save;
-        if bSuccess
-            exp.Info.AddLog('Results saved.');
-        else
-            exp.Info.AddLog('Warning: error saving results.');
-        end
+		exp.Info.Set('mwpi','currReward',mwpi_g.reward);    
 		
 		% append trial result history to subject info
 		thisHistory.task   = vertcat(sRun.res.cClass);
@@ -225,9 +219,9 @@ if ~isempty(sRun.res)
         
         bSuccess = exp.Info.Save;
         if bSuccess
-            exp.Info.AddLog('Subject info saved.');
+            exp.Info.AddLog('Info saved.');
         else
-            exp.Info.AddLog('Warning: error saving subject info.');
+            exp.Info.AddLog('Warning: error saving info.');
         end
 		
 	end
