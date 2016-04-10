@@ -224,10 +224,11 @@ if ~isempty(sRun.res)
         end
         
         bSuccess = exp.Info.Save;
-		if bSuccess
+        if bSuccess
             exp.Info.AddLog('Subject info saved.');
         else
             exp.Info.AddLog('Warning: error saving subject info.');
+        end
 		
 	end
 end
