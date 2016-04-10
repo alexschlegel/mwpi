@@ -54,9 +54,10 @@ exp.Scanner.StartScan(tRun);
 						 trPost
                          ]) + 1;	
 	
-	% pause the scheduler
+	% pause the scheduler and stop autosaving
 	exp.Scheduler.Pause;
-	
+	exp.Info.AutoSave(false);
+    
 	% go!
     
 	[sRun.tStart, sRun.tEnd, sRun.tSequence, sRun.bAbort] = ...
@@ -87,7 +88,7 @@ clear cleanupObj;
 %======================= Nested Functions ==========================%
 
 %----------------------------------------------------------------------%
-    function tNow = DoRest(tNow, ~)
+    function tNow = DoRest(tNow, tNext)
         % Blank the screen, update the level, and
         % prepare the textures for the next block.
         
@@ -109,7 +110,7 @@ clear cleanupObj;
 		% prepare the next probe		
 		mwpi.PrepTextures(mwpi.sParam(kRun, kBlock), d, mwpi.currD);
 			
-        exp.Scheduler.Wait;
+        exp.Scheduler.Wait([], exp.Scanner.TR2ms(tNext-0.25));
 	end
 %---------------------------------------------------------------------%
     function tNow = DoBlock(tNow, ~)
@@ -192,7 +193,12 @@ if ~isempty(sRun.res)
 		exp.Info.Set('mwpi','dmStat', mwpi_g.dm.CompareTasks());
 		exp.Info.Set('mwpi','currD', mwpi_g.currD);
 		exp.Info.Set('mwpi','currReward',mwpi_g.reward);
-		exp.Info.AddLog('Results saved.');
+        bSuccess = exp.Info.Save;
+        if bSuccess
+            exp.Info.AddLog('Results saved.');
+        else
+            exp.Info.AddLog('Warning: error saving results.');
+        end
 		
 		% append trial result history to subject info
 		thisHistory.task   = vertcat(sRun.res.cClass);
@@ -200,7 +206,7 @@ if ~isempty(sRun.res)
 		thisHistory.result = vertcat(sRun.res.bCorrect);
 		
 		sHistory = exp.Subject.Get('history');
-		if isempty(sHistory)
+        if isempty(sHistory)
 			exp.Subject.Set('history', thisHistory);
 		else
 			% append to existing
@@ -215,7 +221,14 @@ if ~isempty(sRun.res)
 				warning('Could not append history - saving to subject info as ''temp_history''. Please resolve manually.');
 				exp.Subject.Set('temp_history', thisHistory);
 			end
-		end
+        end
+        
+        bSuccess = exp.Info.Save;
+		if bSuccess
+            exp.Info.AddLog('Subject info saved.');
+        else
+            exp.Info.AddLog('Warning: error saving subject info.');
+		
 	end
 end
 end
