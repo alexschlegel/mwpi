@@ -8,7 +8,7 @@ function sync_mwpi(direction)
 %
 % Input: direction: either 'push' or 'pull', the direction to sync.
 
-HELMHOLTZ_DIR = '/mnt/tsestorage/helmholtz/mwpi/data';
+HELMHOLTZ_DIR = '/mnt/tsestudies/helmholtz/mwpi/data';
 KOHLER_DIR = '/media/windows/studies/mwpi/data';
 
 switch direction
