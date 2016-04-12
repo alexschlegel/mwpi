@@ -34,7 +34,7 @@ else
 end
 
 % do the sync
-cmdFormat = 'rsync -dPz %s/ %s';
+cmdFormat = 'rsync -dPzt %s/ %s';
 
 if bPush
 	system(sprintf(cmdFormat, local, remote));

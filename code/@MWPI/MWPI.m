@@ -123,7 +123,19 @@ classdef MWPI < PTB.Object
 				fieldnames(mwpi.sTexture));
 			mwpi.Experiment.Window.AddLog('Textures closed.');
 			
+			if mwpi.bPractice
+				remoteHost = 'kohler';
+			else
+				remoteHost = 'helmholtz';
+			end
+			
             mwpi.Experiment.End(varargin{:});
+			
+			% prompt to sync data
+			bSync = askyesno(['Sync data to ' remoteHost '?'], 'dialog', false);
+			if bSync
+				sync_mwpi('push');
+			end
 			
 			if ~mwpi.bPractice
 				disp(['Total reward: ' StringMoney(mwpi.reward)]);
