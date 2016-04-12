@@ -23,7 +23,7 @@ end
 % are we on kohler?
 [~,hn] = system('hostname');
 
-if strcmp(hn, 'kohler')
+if strcmp(hn, sprintf('kohler\n'))
 	local = KOHLER_DIR;
 	remote = ['tselab@helmholtz.dartmouth.edu:' HELMHOLTZ_DIR];
 elseif isdir(HELMHOLTZ_DIR)
