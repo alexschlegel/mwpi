@@ -54,9 +54,8 @@ exp.Scanner.StartScan(tRun);
 						 trPost
                          ]) + 1;	
 	
-	% pause the scheduler and stop autosaving
+	% pause the scheduler
 	exp.Scheduler.Pause;
-	exp.Info.AutoSave(false);
     
 	% go!
     
