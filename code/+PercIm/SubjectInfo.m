@@ -107,7 +107,7 @@ status(sprintf('selected subject state: %s',opt.state));
 %read the fmri data (+ subject age)
 
 	for kS=1:nSubject
-		if ~isempty(s.path.session.fmri{kS})
+		if numel(s.path.session.fmri) >= kS && ~isempty(s.path.session.fmri{kS})
 			x	= load(s.path.session.fmri{kS});
 
 			s.subject.age(kS)	= ConvertUnit(x.PTBIFO.experiment.start - x.PTBIFO.subject.dob,'ms','day')/365.25;
