@@ -79,7 +79,7 @@ status(sprintf('selected subject state: %s',opt.state));
 
 %get the practice and fmri session paths
 	[s.code.practice,s.code.fmri,cPathPractice,cPathFMRI]	= deal(cell(nSubject,1));
-	s.path.session = struct('practice', {}, 'fmri', {});
+	s.path.session = struct('practice', {{}}, 'fmri', {{}});
 
 	for kS=1:nSubject
 		cPathSubject		= FindFiles(strDirData,['\d' s.id{kS} '\.mat$']);
