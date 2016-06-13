@@ -89,11 +89,11 @@ status(sprintf('selected subject state: %s',opt.state));
 
 		if nSession>0
 			s.path.session.practice{kS}	= cPathSubject{kSort(1)};
-			s.code.practice{kS}	= PathGetFilePre(cPathPractice{kS});
+			s.code.practice{kS}	= PathGetFilePre(s.path.session.practice{kS});
 
 			if nSession>1
 				s.path.session.fmri{kS}	= cPathSubject{kSort(2)};
-				s.code.fmri{kS}	= PathGetFilePre(cPathFMRI{kS});
+				s.code.fmri{kS}	= PathGetFilePre(s.path.session.fmri{kS});
 
 				if nSession > 2
                     error([num2str(nSession) ' sessions found for subject ' s.id{kS} '.']);
