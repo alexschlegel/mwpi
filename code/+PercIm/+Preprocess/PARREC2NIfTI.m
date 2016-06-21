@@ -172,7 +172,7 @@ function b = ConvertOne(strPathPAR,strPathNII)
                     NIfTI.Write(nii,strPathNII);
             %so much wtf?!?! fix for first TR coming through with slice
             %order [18:35 1:27] then 1:35 by 6s
-            elseif all(weirdOrder == hdr.imageinfo.slice_number);
+			elseif numel(weirdOrder) == numel(hdr.imageinfo.slice_number) && all(weirdOrder == hdr.imageinfo.slice_number);
                 %load the NIfTI file
                     nii     = NIfTI.Read(strPathNII);
                     sTemp	= zeros(size(nii.data));
