@@ -23,5 +23,7 @@ sync_mwpi('pull');
 
 PercIm.Preprocess.Organize(varargin{:});
 PercIm.Preprocess.Functional(varargin{:});
+PercIm.Preprocess.FreeSurfer(varargin{:});
+PercIm.Preprocess.Masks(varargin{:});
 
 end
