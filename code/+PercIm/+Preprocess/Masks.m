@@ -24,7 +24,7 @@ opt	= ParseArgs(varargin,...
 
 ifo	= PercIm.SubjectInfo;
 
-cSubject	= ifo.code.mri;
+cSubject	= ifo.code.fmri;
 cSubject	= cSubject(~cellfun(@isempty,cSubject));
 
 strDirMaskOut	= DirAppend(strDirData,'mask');
