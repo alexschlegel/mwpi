@@ -23,7 +23,7 @@ opt	= ParseArgs(varargin,...
 		'force'	, false	  ...
 		);
 
-ifo	= MWL.GetSubjectInfo;
+ifo	= PercIm.SubjectInfo;
 
 %get the directories to process
 	cPathDTI	= ifo.path.diffusion.raw;
