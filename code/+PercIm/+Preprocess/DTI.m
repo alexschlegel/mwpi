@@ -39,6 +39,10 @@ ifo	= PercIm.SubjectInfo;
 			'f_prompt', false	  ...
 			);
 
+if ~all(b)
+	keyboard;
+end
+
 %compute MNI FAZ and RDZ data
 	%merging threshold for creating the randomise mask (i.e. threshWM==0.75 ==>
 	%a voxel must be in 75% of subjects' white matter masks to be included in
