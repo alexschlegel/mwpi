@@ -101,6 +101,12 @@ status(sprintf('selected subject state: %s',opt.state));
 			end
 		end
 	end
+	
+	% remove empty entries
+	bPractice = ~cellfun(@isempty, s.code.practice);
+	s.code.practice = s.code.practice(bPractice);
+	bFmri = ~cellfun(@isempty, s.code.fmri);
+	s.code.fmri = s.code.fmri(bFmri);
 
 %is the subject data preprocessed? TODO: figure out how to test for this.
 
