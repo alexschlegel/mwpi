@@ -42,11 +42,10 @@ status(sprintf('selected subject state: %s',opt.state));
 % SC = "scribble cloud"
 % SW = "scribble wave"
 
-	s.class	= {'BR';'BS';'SC';'SW'};
+	s.cClass	= {'BR';'BS';'SC';'SW'};
 
     %remember, percept = "visual" and image = "working memory" / "cued"
-	cScheme	= {'percept'; 'image'; 'image_uncued'};
-	nScheme	= numel(cScheme);
+	s.cScheme	= {'percept'; 'image'; 'image_uncued'};
 
 %get the subject ids
 	if isempty(opt.subject)
