@@ -67,7 +67,7 @@ global strDirAnalysis;
 	end
 
 %restructure the results
-	s	= restruct(cell2mat(cResult));
+	s	= restruct(cell2mat(cResult), 'array', true);
 end
 %--------------------------------------------------------------------------%
 
@@ -130,6 +130,11 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 		
 		%%% Part 2: per-TR target and chunk information %%%
 		
+		% deal with custom attributes
+		if isfield(sSession.mwpi, 'customAttributes')
+			customRun = getfield(restruct(sSession.mwpi.customAttributes, 'array', true),'run');
+		end
+		
 		% block2target parameters
 		HRF			= 1;
 		BlockOffset = 0;
@@ -169,21 +174,30 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 			% all blocks
 				[cTarget,cEvent]	= deal(cell(nRun,1));
 				for kR=1:nRun
-					block		= sBlock.(strScheme)(kR,:);
 					
-					% target cell
-					cTarget{kR} = block2target(block, durBlock, ...
-						durRest, cCondition, durPre, durPost, ...
-						'hrf',			HRF,			...
-						'block_offset',	BlockOffset,	...
-						'block_sub',	BlockSub		...
-						);
+					bCustomRun = (kR == customRun);
+					if any(bCustomRun)
+						cTarget{kR} = sSession.mwpi.customAttributes(bCustomRun).target.(strScheme).all;
+						if kS==1
+							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.(strScheme).all;
+						end
+					else
+						block		= sBlock.(strScheme)(kR,:);
 					
-					% event matrix
-					if kS==1
-						cEvent{kR}	= block2event(block,durBlock,durRest,durPre,durPost);
-					end					
-				end	
+						% target cell
+						cTarget{kR} = block2target(block, durBlock, ...
+							durRest, cCondition, durPre, durPost, ...
+							'hrf',			HRF,			...
+							'block_offset',	BlockOffset,	...
+							'block_sub',	BlockSub		...
+							);
+					
+						% event matrix
+						if kS==1
+							cEvent{kR}	= block2event(block,durBlock,durRest,durPre,durPost);
+						end					
+					end	
+				end
 				
 				sAttr.target.(strScheme).all = vertcat(cTarget{:});
 				
@@ -203,21 +217,30 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 			% just correct blocks
 				[cTarget,cEvent]	= deal(cell(nRun,1));
 				for kR=1:nRun
-					block		= sBlock.(strScheme)(kR,:);
-					correct		= sBlock.correct(kR,:);
-					blockCI		= block + nCondition*correct;
 					
-					% target cell
-					cTarget{kR} = block2target(blockCI, durBlock, ...
-						durRest, cConditionCI, durPre, durPost, ...
-						'hrf',			HRF,			...
-						'block_offset',	BlockOffset,	...
-						'block_sub',	BlockSub		...
-						);					
+					bCustomRun = (kR == customRun);
+					if any(bCustomRun)
+						cTarget{kR} = sSession.mwpi.customAttributes(bCustomRun).target.(strScheme).correct;
+						if kS==1
+							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.(strScheme).correct;
+						end
+					else
+						block		= sBlock.(strScheme)(kR,:);
+						correct		= sBlock.correct(kR,:);
+						blockCI		= block + nCondition*correct;
 					
-					% event matrix
-					if kS==1
-						cEvent{kR}	= block2event(blockCI,durBlock,durRest,durPre,durPost);
+						% target cell
+						cTarget{kR} = block2target(blockCI, durBlock, ...
+							durRest, cConditionCI, durPre, durPost, ...
+							'hrf',			HRF,			...
+							'block_offset',	BlockOffset,	...
+							'block_sub',	BlockSub		...
+							);					
+					
+						% event matrix
+						if kS==1
+							cEvent{kR}	= block2event(blockCI,durBlock,durRest,durPre,durPost);
+						end
 					end
 				end
 					
