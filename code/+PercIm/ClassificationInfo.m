@@ -6,9 +6,10 @@ function s = ClassificationInfo(varargin)
 %
 % In:
 %	<options>:
-%		session:	(<all>) a cell of session codes
+%		session:	(<all>) a session code or cell of session codes
 %		force:		(false) true to force recalculation of
 %					previously-calculated results
+%		ifo:		(PercIm.SubjectInfo) precalculated subject info struct
 %
 % Out:
 %	s:	a struct of classification info
@@ -19,6 +20,8 @@ function s = ClassificationInfo(varargin)
 % ShareAlike 3.0 Unported License.
 global strDirAnalysis;
 
+ifo	= PercIm.SubjectInfo;
+
 %parse the inputs
 	opt	= ParseArgs(varargin,...
 			'session'	, []	, ...
@@ -26,10 +29,9 @@ global strDirAnalysis;
 			);
 		
 	if isempty(opt.session)
-		ifo			= PercIm.SubjectInfo;
 		cSession	= ifo.code.fmri;
 	else
-		cSession	= opt.session;
+		cSession	= ForceCell(opt.session);
 	end
 	cResult = cell(size(cSession));
 
@@ -133,6 +135,8 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 		% deal with custom attributes
 		if isfield(sSession.mwpi, 'customAttributes')
 			customRun = getfield(restruct(sSession.mwpi.customAttributes, 'array', true),'run');
+		else
+			customRun = [];
 		end
 		
 		% block2target parameters
@@ -179,7 +183,7 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 					if any(bCustomRun)
 						cTarget{kR} = sSession.mwpi.customAttributes(bCustomRun).target.(strScheme).all;
 						if kS==1
-							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.(strScheme).all;
+							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.all;
 						end
 					else
 						block		= sBlock.(strScheme)(kR,:);
@@ -222,7 +226,7 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 					if any(bCustomRun)
 						cTarget{kR} = sSession.mwpi.customAttributes(bCustomRun).target.(strScheme).correct;
 						if kS==1
-							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.(strScheme).correct;
+							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.correct;
 						end
 					else
 						block		= sBlock.(strScheme)(kR,:);
