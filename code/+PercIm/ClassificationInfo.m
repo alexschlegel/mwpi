@@ -4,12 +4,27 @@ function s = ClassificationInfo(varargin)
 % Description: load information about fMRI runs needed for classification
 % analyses. Based on mwlearn's GO.BehavioralResults.
 %
+% Syntax: s = ClassificationInfo(<options>)
+%
 % In:
 %	<options>:
 %		session:	(<all>) a session code or cell of session codes
-%		force:		(false) true to force recalculation of
-%					previously-calculated results
+%
 %		ifo:		(PercIm.SubjectInfo) precalculated subject info struct
+%
+%		fcorrect:   (<no correction>) the handle to a function that
+%					performs manual corrections to the labels and chunks of
+%					each run. An fcorrect function is specified as follows:
+%
+%					Syntax: [targetOut, eventOut] = fcorrect(session, run, targetIn, eventIn)
+%
+%						session:	the session code
+%						run:		the run number
+%						targetIn:	a target array that has not been manually corrected
+%						targetOut:  the corrected version of targetIn
+%						eventIn:	an event matrix that has not been manually corrected
+%						eventOut:	the corrected version of eventIn, 
+%									or empty array if eventIn was empty.
 %
 % Out:
 %	s:	a struct of classification info
@@ -18,62 +33,36 @@ function s = ClassificationInfo(varargin)
 % Copyright 2016 Alex Schlegel (schlegel@gmail.com) and Ethan Blackwood.
 % This work is licensed under a Creative Commons Attribution-NonCommercial-
 % ShareAlike 3.0 Unported License.
-global strDirAnalysis;
-
-ifo	= PercIm.SubjectInfo;
 
 %parse the inputs
 	opt	= ParseArgs(varargin,...
-			'session'	, []	, ...
-			'force'	, false		  ...
+			'session'	, []					, ...
+			'force'		, false					, ...
+			'ifo'		, []					, ...
+			'fcorrect'	, @(s,r,t,e) deal(t,e)	  ...
 			);
 		
+	if isempty(opt.ifo)
+		opt.ifo = PercIm.SubjectInfo;
+	end
+		
 	if isempty(opt.session)
-		cSession	= ifo.code.fmri;
+		cSession	= opt.ifo.code.fmri;
 	else
 		cSession	= ForceCell(opt.session);
 	end
-	cResult = cell(size(cSession));
 
-%load existing results
-	strPathMe		= mfilename('fullpath');
-	strPathStore	= PathAddSuffix(strDirAnalysis,sprintf('%s-store',PathGetFilePre(strPathMe)),'mat');
-	if ~opt.force && FileExists(strPathStore)
-		sStore	= getfield(load(strPathStore),'sStore');
-	else
-		sStore	= dealstruct('code','result',{});
-	end
-
-%copy the previously-constructed results
-	[bStore,kStore]	= ismembercellstr(cSession,sStore.code);
-	cResult(bStore)	= sStore.result(kStore(bStore));
-	
-%construct the new ones
-	bNew	= ~bStore;
-	if any(bNew)
-		cSessionNew	= cSession(bNew);
-		
-		[cResultNew,bError]	= cellfunprogress(@(sess) LoadInfo(sess,ifo),cSessionNew,...
-								'label'	, 'loading mwpi classification info'	, ...
-								'uni'	, false									  ...
-								);
-		bError				= cell2mat(bError);
-		cResult(bNew)		= cResultNew;
-		
-		%save the results
-			bSave			= ~bError;
-			sStore.code		= [sStore.code; reshape(cSessionNew(bSave),[],1)];
-			sStore.result	= [sStore.result; reshape(cResultNew(bSave),[],1)];
-			
-			save(strPathStore,'sStore');
-	end
+cResult	= cellfunprogress(@(sess) LoadInfo(sess,opt.ifo,opt.fcorrect),cSession,...
+ 							'label'	, 'loading mwpi classification info'	, ...
+ 							'uni'	, false									  ...
+ 							);
 
 %restructure the results
 	s	= restruct(cell2mat(cResult), 'array', true);
 end
 %--------------------------------------------------------------------------%
 
-function [sResult, bError] = LoadInfo(strSession, ifo)
+function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
 	global strDirData;
 	
 	bError = false;
@@ -132,13 +121,6 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 		
 		%%% Part 2: per-TR target and chunk information %%%
 		
-		% deal with custom attributes
-		if isfield(sSession.mwpi, 'customAttributes')
-			customRun = getfield(restruct(sSession.mwpi.customAttributes, 'array', true),'run');
-		else
-			customRun = [];
-		end
-		
 		% block2target parameters
 		HRF			= 1;
 		BlockOffset = 0;
@@ -178,29 +160,24 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 			% all blocks
 				[cTarget,cEvent]	= deal(cell(nRun,1));
 				for kR=1:nRun
+
+					block		= sBlock.(strScheme)(kR,:);
+
+					% target cell
+					cTarget{kR} = block2target(block, durBlock, ...
+						durRest, cCondition, durPre, durPost, ...
+						'hrf',			HRF,			...
+						'block_offset',	BlockOffset,	...
+						'block_sub',	BlockSub		...
+						);
+
+					% event matrix
+					if kS==1
+						cEvent{kR}	= block2event(block,durBlock,durRest,durPre,durPost);
+					end
 					
-					bCustomRun = (kR == customRun);
-					if any(bCustomRun)
-						cTarget{kR} = sSession.mwpi.customAttributes(bCustomRun).target.(strScheme).all;
-						if kS==1
-							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.all;
-						end
-					else
-						block		= sBlock.(strScheme)(kR,:);
-					
-						% target cell
-						cTarget{kR} = block2target(block, durBlock, ...
-							durRest, cCondition, durPre, durPost, ...
-							'hrf',			HRF,			...
-							'block_offset',	BlockOffset,	...
-							'block_sub',	BlockSub		...
-							);
-					
-						% event matrix
-						if kS==1
-							cEvent{kR}	= block2event(block,durBlock,durRest,durPre,durPost);
-						end					
-					end	
+					% manual corrections
+					[cTarget{kR}, cEvent{kR}] = fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
 				end
 				
 				sAttr.target.(strScheme).all = vertcat(cTarget{:});
@@ -222,30 +199,25 @@ function [sResult, bError] = LoadInfo(strSession, ifo)
 				[cTarget,cEvent]	= deal(cell(nRun,1));
 				for kR=1:nRun
 					
-					bCustomRun = (kR == customRun);
-					if any(bCustomRun)
-						cTarget{kR} = sSession.mwpi.customAttributes(bCustomRun).target.(strScheme).correct;
-						if kS==1
-							cEvent{kR}  = sSession.mwpi.customAttributes(bCustomRun).event.correct;
-						end
-					else
-						block		= sBlock.(strScheme)(kR,:);
-						correct		= sBlock.correct(kR,:);
-						blockCI		= block + nCondition*correct;
-					
-						% target cell
-						cTarget{kR} = block2target(blockCI, durBlock, ...
-							durRest, cConditionCI, durPre, durPost, ...
-							'hrf',			HRF,			...
-							'block_offset',	BlockOffset,	...
-							'block_sub',	BlockSub		...
-							);					
-					
-						% event matrix
-						if kS==1
-							cEvent{kR}	= block2event(blockCI,durBlock,durRest,durPre,durPost);
-						end
+					block		= sBlock.(strScheme)(kR,:);
+					correct		= sBlock.correct(kR,:);
+					blockCI		= block + nCondition*correct;
+
+					% target cell
+					cTarget{kR} = block2target(blockCI, durBlock, ...
+						durRest, cConditionCI, durPre, durPost, ...
+						'hrf',			HRF,			...
+						'block_offset',	BlockOffset,	...
+						'block_sub',	BlockSub		...
+						);					
+
+					% event matrix
+					if kS==1
+						cEvent{kR}	= block2event(blockCI,durBlock,durRest,durPre,durPost);
 					end
+					
+					% manual corrections
+					[cTarget{kR}, cEvent{kR}] = fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
 				end
 					
 				sAttr.target.(strScheme).correct = vertcat(cTarget{:});
