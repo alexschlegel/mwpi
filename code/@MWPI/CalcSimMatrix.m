@@ -17,6 +17,8 @@ function cSM = CalcSimMatrix(varargin)
 % under a Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported
 % License.
 
+global strDirData;
+
 % get session codes
 if nargin == 0
 	cCode = getfield(PercIm.SubjectInfo,'code','fmri');
