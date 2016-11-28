@@ -12,6 +12,14 @@ function s = ClassificationInfo(varargin)
 %
 %		ifo:		(PercIm.SubjectInfo) precalculated subject info struct
 %
+%		offset:		(0) number of TRs to offset the start of each chunk
+%					from the start of a block (not including 1 TR for the
+%					hemodynamic response function).
+%
+%		maxlen:		(4) max number of TRs included in each chunk. Will be
+%					less than this if the number of TRs per block is less
+%					than offset + maxlen.
+%
 %		fcorrect:   (<no correction>) the handle to a function that
 %					performs manual corrections to the labels and chunks of
 %					each run. An fcorrect function is specified as follows:
@@ -37,8 +45,9 @@ function s = ClassificationInfo(varargin)
 %parse the inputs
 	opt	= ParseArgs(varargin,...
 			'session'	, []					, ...
-			'force'		, false					, ...
 			'ifo'		, []					, ...
+			'offset'	, 0						, ...
+			'maxlen'	, 4						, ...
 			'fcorrect'	, @(s,r,t,e) deal(t,e)	  ...
 			);
 		
@@ -52,7 +61,7 @@ function s = ClassificationInfo(varargin)
 		cSession	= ForceCell(opt.session);
 	end
 
-cResult	= cellfunprogress(@(sess) LoadInfo(sess,opt.ifo,opt.fcorrect),cSession,...
+cResult	= cellfunprogress(@(sess) LoadInfo(sess,opt),cSession,...
  							'label'	, 'loading mwpi classification info'	, ...
  							'uni'	, false									  ...
  							);
@@ -62,13 +71,13 @@ cResult	= cellfunprogress(@(sess) LoadInfo(sess,opt.ifo,opt.fcorrect),cSession,.
 end
 %--------------------------------------------------------------------------%
 
-function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
+function [sResult, bError] = LoadInfo(strSession, opt)
 	global strDirData;
 	
 	bError = false;
 		
 	strPathSession	= PathUnsplit(strDirData,strSession,'mat');
-	cScheme = ifo.cScheme;
+	cScheme = opt.ifo.cScheme;
 	
 	if FileExists(strPathSession)
 		sSession = getfield(load(strPathSession), 'PTBIFO');
@@ -123,8 +132,8 @@ function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
 		
 		% block2target parameters
 		HRF			= 1;
-		BlockOffset = 0;
-		BlockSub	= 4;
+		BlockOffset = opt.offset;
+		BlockSub	= opt.maxlen;
 				
 		% timings		
 		durBlock	= PIParam.exp.block.retention.time;
@@ -134,7 +143,7 @@ function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
 					  PIParam.exp.rest.time				+ ...
 					  PIParam.exp.block.prompt.time;
 				
-		durPre		= PIParam.exp.rest.time		+ ...
+		durPre		= PIParam.exp.rest.time			+ ...
 					  PIParam.exp.block.prompt.time	- ...
 					  durRest;
 				  
@@ -148,7 +157,7 @@ function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
 		% construct attributes
 		sAttr = struct;		
 		nScheme = numel(cScheme);
-		cCondition = ifo.cClass;
+		cCondition = opt.ifo.cClass;
 		nCondition = numel(cCondition);
 		cConditionCI	= [repmat({'Blank'},[nCondition 1]); cCondition];
 		
@@ -177,7 +186,7 @@ function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
 					end
 					
 					% manual corrections
-					[cTarget{kR}, cEvent{kR}] = fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
+					[cTarget{kR}, cEvent{kR}] = opt.fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
 				end
 				
 				sAttr.target.(strScheme).all = vertcat(cTarget{:});
@@ -217,7 +226,7 @@ function [sResult, bError] = LoadInfo(strSession, ifo, fcorrect)
 					end
 					
 					% manual corrections
-					[cTarget{kR}, cEvent{kR}] = fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
+					[cTarget{kR}, cEvent{kR}] = opt.fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
 				end
 					
 				sAttr.target.(strScheme).correct = vertcat(cTarget{:});
