@@ -36,6 +36,8 @@ classdef MWPI < PTB.Object
 % In:
 %   <options>:
 %       debug:      (0) the debug level
+%       usb_serial: (true) true to use serial-over-usb instead of a real
+%                   serial port (linux only)
 %
 % Updated: 2016-03-16
 
@@ -84,7 +86,8 @@ classdef MWPI < PTB.Object
             
             % build opt struct for experiment
             opt = ParseArgs(varargin, ...
-                'debug'		,   0 ...
+                'debug'		,   0,      ...
+                'usb_serial',   true    ...
                 );
             
 			opt.practice = askyesno('Is this a training session?','dialog',false);
@@ -104,6 +107,12 @@ classdef MWPI < PTB.Object
             opt.text_size = MWPI.Param('text','size');
             opt.text_family = MWPI.Param('text','family');
             opt.text_color = MWPI.Param('text','colNorm');
+            
+            % usb over serial support
+            if opt.usb_serial
+                opt.serial_port = '/dev/ttyUSB0';
+            end
+            opt = rmfield(opt,'usb_serial');
             
             cOpt = opt2cell(opt);
             
