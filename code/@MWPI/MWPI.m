@@ -109,7 +109,7 @@ classdef MWPI < PTB.Object
             opt.text_color = MWPI.Param('text','colNorm');
             
             % usb over serial support
-            if opt.usb_serial && strcmp(opt.context,'fmri')
+            if opt.usb_serial && ~mwpi.bPractice
                 opt.serial_port = '/dev/ttyUSB0';
             end
             opt = rmfield(opt,'usb_serial');
