@@ -114,6 +114,11 @@ classdef MWPI < PTB.Object
             end
             opt = rmfield(opt,'usb_serial');
             
+            if ~mwpi.bPractice
+                opt.distance = 0.9;
+            end
+            
+            
             cOpt = opt2cell(opt);
             
             % create experiment
@@ -133,7 +138,7 @@ classdef MWPI < PTB.Object
 			mwpi.Experiment.Window.AddLog('Textures closed.');
 			
 			if mwpi.bPractice
-				remoteHost = 'kohler';
+				remoteHost = 'golgi';
 			else
 				remoteHost = 'helmholtz';
 			end
@@ -143,7 +148,7 @@ classdef MWPI < PTB.Object
 			% prompt to sync data
 			bSync = askyesno(['Sync data to ' remoteHost '?'], 'dialog', false);
 			if bSync
-				sync_mwpi('push');
+				sync_mwpi('push',remoteHost);
 			end
 			
 			if ~mwpi.bPractice
