@@ -68,10 +68,10 @@ arrKey = cell2mat(cKey);
 kTrial = 0;
 
 % open textures for use during trials
-if isempty(exp.Window.Get('current'));
+if isempty(exp.Window.Get('current'))
 	exp.Window.OpenTexture('current');
 end
-if isempty(exp.Window.Get('original'));
+if isempty(exp.Window.Get('original'))
 	exp.Window.OpenTexture('original');
 end
 
@@ -87,7 +87,9 @@ cNumPos = fPos(numOffset);
 
 % show instructions-----------------------------------------
 
-exp.Show.Instructions(['<size:0.8>In the following trials, a sample stimulus will appear ' ...
+szInst = MWPI.Param('text','szInst');
+
+exp.Show.Instructions(['<size:' num2str(szInst) '>In the following trials, a sample stimulus will appear ' ...
 	'in the center, with four more stimuli around it. Using the button box, rank ' ...
 	'each surrounding stimulus according to how perceptually similar it is to the ' ...
 	'sample stimulus (most similar first, least similar last).</size>']);

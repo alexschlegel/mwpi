@@ -109,13 +109,14 @@ classdef MWPI < PTB.Object
             opt.text_color = MWPI.Param('text','colNorm');
             
             % usb over serial support
-            if opt.usb_serial && ~mwpi.bPractice
+            if opt.usb_serial && ~mwpi.bPractice && opt.debug == 0
                 opt.serial_port = '/dev/ttyUSB0';
             end
             opt = rmfield(opt,'usb_serial');
             
-            if ~mwpi.bPractice
-                opt.distance = 0.9;
+            if ~mwpi.bPractice % updated projector dimensions
+                opt.distance = 1.245;
+                opt.screendim = [0.418 0.262];
             end
             
             

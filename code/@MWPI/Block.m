@@ -327,8 +327,12 @@ tSequence = [	num2cell(cumsum([	MWPI.Param(strDomain,'block','prompt','time')
 			4,	[.95*horzOffset, 0]   ...
 			);
 		
-		szFeedback = num2str(MWPI.Param('text', 'szFeedback'));
-		exp.Show.Text(['<size:' szFeedback '>' strFeedback '</size>'], ...
+		szFeedback = MWPI.Param('text', 'szFeedback');
+        if mwpi.bPractice
+            szFeedback = szFeedback/.7;
+        end
+        
+		exp.Show.Text(['<size:' num2str(szFeedback) '>' strFeedback '</size>'], ...
 			posFeedback, 'window', winFeedback);
 		
 		exp.Show.Texture(winFeedback);

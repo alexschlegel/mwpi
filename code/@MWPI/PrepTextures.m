@@ -37,6 +37,7 @@ shw	= mwpi.Experiment.Show;
 
 szStimVA  = MWPI.Param('stim', 'size');
 szStimPX  = round(mwpi.Experiment.Window.va2px(szStimVA));
+szBorder = MWPI.Param('stim', 'sizeBorder');
 offset  = MWPI.Param('stim', 'offset');
 
 shw.Blank('window', 'stim');
@@ -63,7 +64,8 @@ for kPos = 1:4
 		'feedback', bCued, 'distractors', bCued);
 	ifo.prompt{kPos,1} = sIfo(kPos).base;
 	
-	shw.Image(sStim(kPos).base, cOffset{kPos}, 'border', bFrame, 'window', 'stim');
+	shw.Image(sStim(kPos).base, cOffset{kPos}, 'border', bFrame, ...
+        'border_size', szBorder, 'window', 'stim');
 end
 
 ifo.cued   = ifo.prompt{sParam.posCued};
@@ -72,7 +74,7 @@ ifo.uncued = ifo.prompt{sParam.posUncued};
 % frame (cue)
 shw.Blank('window', 'frame');
 shw.Rectangle(MWPI.Param('color','back'), szStimVA, cOffset{sParam.posCued}, ...
-	'border', true, 'window', 'frame');
+	'border', true, 'border_size', szBorder,'window', 'frame');
 
 % retention period
 vClass = sParam.vClass;
