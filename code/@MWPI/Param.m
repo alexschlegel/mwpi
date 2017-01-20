@@ -54,7 +54,7 @@ function P = InitializeP
 	
 	%global strDirBase;
     
-    SCALING_FACTOR = 0.7;
+    SCALING_FACTOR = 0.65;
     
 	%--stimulus parameters-------------------------------------
     P.stim = struct( ...
