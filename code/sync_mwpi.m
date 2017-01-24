@@ -32,7 +32,7 @@ assert(~strcmp(hn,sprintf('%s\n',remoteHost)), 'Remote host must be different fr
 remote = sprintf('tselab@%s.dartmouth.edu:%s', remoteHost, local);
 
 % do the sync
-cmdFormat = 'LD_LIBRARY_PATH= rsync -dPzt %s/ %s';
+cmdFormat = 'LD_LIBRARY_PATH= rsync -dPztu %s/ %s';
 
 if bPush
 	system(sprintf(cmdFormat, local, remote));
