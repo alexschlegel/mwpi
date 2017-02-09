@@ -17,9 +17,10 @@ function All(varargin)
 
 % fMRI data from Rolando
 syncmri;
+syncmri_new;
 
 % Pull behavioral data to Helmholtz (should be there already, but just make sure)
-sync_mwpi('pull');
+sync_mwpi('pull','golgi');
 
 PercIm.Preprocess.Organize(varargin{:});
 PercIm.Preprocess.Functional(varargin{:});

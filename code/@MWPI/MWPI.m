@@ -126,6 +126,12 @@ classdef MWPI < PTB.Object
             mwpi.Experiment = PTB.Experiment(cOpt{:});
             mwpi.Start;
             
+            % save accession number
+            if ~mwpi.bPractice && opt.debug == 0
+                strAccession = ask('Enter accession number:','dialog',false);
+                mwpi.Experiment.Info.Set('session','accession',strAccession);
+            end
+            
             % initialize experiment (sets reward and sParam)
             mwpi.Init(opt.debug);           
                       

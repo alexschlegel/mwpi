@@ -32,7 +32,7 @@ opt	= ParseArgs(varargin,...
 		);
 
 opt.exclude	= ForceCell(opt.exclude);
-opt.state	= CheckInput(opt.state,'state',{'all','fmri','preprocess'});
+opt.state	= CheckInput(opt.state,'state',{'all','fmri','fmri_new','preprocess'});
 
 status(sprintf('selected subject state: %s',opt.state));
 
@@ -111,14 +111,24 @@ status(sprintf('selected subject state: %s',opt.state));
 
 %read the fmri data (+ subject age)
 
-	for kS=1:nSubject
+s.code.fmri_new = cell(size(cID));
+s.accession = cell(size(cID));
+    for kS=1:nSubject
 		if numel(s.path.session.fmri) >= kS && ~isempty(s.path.session.fmri{kS})
 			x	= load(s.path.session.fmri{kS});
 
 			s.subject.age(kS)	= ConvertUnit(x.PTBIFO.experiment.start - x.PTBIFO.subject.dob,'ms','day')/365.25;
-			%--EDIT LINE--%
+            
+            if isfield(x.PTBIFO.session,'accession')
+                s.code.fmri_new{kS} = x.PTBIFO.session.name;
+                s.accession{kS} = x.PTBIFO.session.accession;
+            end
 		end
-	end
+    end
+    % remove empty entries
+    bAccession = ~cellfun(@isempty,s.code.fmri_new);
+    s.code.fmri_new = s.code.fmri_new(bAccession);
+    s.accession = s.accession(bAccession);
 
 % more data paths
 s.path.functional.raw	= cellfun(@(s) GetPathFunctional(strDirData,s,'run','all'),s.code.fmri,'uni',false);
