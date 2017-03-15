@@ -113,10 +113,12 @@ status(sprintf('selected subject state: %s',opt.state));
 
 s.code.fmri_new = cell(size(cID));
 s.accession = cell(size(cID));
+s.num_functional = zeros(size(cID));
     for kS=1:nSubject
 		if numel(s.path.session.fmri) >= kS && ~isempty(s.path.session.fmri{kS})
 			x	= load(s.path.session.fmri{kS});
-
+            
+            s.num_functional(kS) = size(x.PTBIFO.mwpi.run, 2);
 			s.subject.age(kS)	= ConvertUnit(x.PTBIFO.experiment.start - x.PTBIFO.subject.dob,'ms','day')/365.25;
             
             if isfield(x.PTBIFO.session,'accession')
@@ -129,12 +131,13 @@ s.accession = cell(size(cID));
     bAccession = ~cellfun(@isempty,s.code.fmri_new);
     s.code.fmri_new = s.code.fmri_new(bAccession);
     s.accession = s.accession(bAccession);
+    s.num_functional = s.num_functional(bFmri);
 
 % more data paths
-s.path.functional.raw	= cellfun(@(s) GetPathFunctional(strDirData,s,'run','all'),s.code.fmri,'uni',false);
-s.path.functional.pp	= cellfun(@(s,raw) conditional(numel(raw)>0,GetPathFunctional(strDirData,s,'type','pp','run',(1:numel(raw))'),{}),s.code.fmri,s.path.functional.raw,'uni',false);
-s.path.functional.cat	= cellfun(@(s) GetPathFunctional(strDirData,s,'type','cat'),s.code.fmri,'uni',false);
-s.path.diffusion.raw	= cellfun(@(s) GetPathDTI(strDirData,s),s.code.fmri,'uni',false);
-s.path.structural.raw	= cellfun(@(s) GetPathStructural(strDirData,s),s.code.fmri,'uni',false);
+s.path.functional.raw	= cellfun(@(code) GetPathFunctional(strDirData,code,'run','all') ,s.code.fmri,'uni',false);
+s.path.functional.pp	= cellfun(@(code,raw) conditional(numel(raw)>0,GetPathFunctional(strDirData,code,'type','pp','run',(1:numel(raw))'),{}),s.code.fmri,s.path.functional.raw,'uni',false);
+s.path.functional.cat	= cellfun(@(code) GetPathFunctional(strDirData,code,'type','cat'),s.code.fmri,'uni',false);
+s.path.diffusion.raw	= cellfun(@(code) GetPathDTI(strDirData,code), s.code.fmri,'uni',false);
+s.path.structural.raw	= cellfun(@(code) GetPathStructural(strDirData,code), s.code.fmri,'uni',false);
 
 end

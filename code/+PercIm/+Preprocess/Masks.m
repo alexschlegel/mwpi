@@ -29,7 +29,7 @@ cSubject	= cSubject(~cellfun(@isempty,cSubject));
 
 strDirMaskOut	= DirAppend(strDirData,'mask');
 
-%CI masks
+%CI masks (3 mm)
 	strDirMaskCI	= DirAppend(strDirData,'mask-ci');
 	cPathMaskCI		= FindFilesByExtension(strDirMaskCI,'nii.gz');
 
