@@ -116,7 +116,7 @@ function [sResult, bError] = LoadInfo(strSession, opt)
 		end
 
     % add fixation task average accuracy (per-run mean)
-    sBlock.fixationAcc = cellnestflatten(arrayfun(@(run) repmat(run.meanFracFixationCorrect,length(run.res),1), 'uni', false));
+    sBlock.fixationAcc = repmat([sRes.meanFracFixationCorrect]',1,numel(sRes(1).res));
     sBlock.correct = sBlock.correct & (sBlock.fixationAcc >= opt.fixation_threshold);
 
 		% response time %

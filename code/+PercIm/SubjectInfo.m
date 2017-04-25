@@ -128,10 +128,11 @@ s.num_functional = zeros(size(cID));
 		end
     end
     % remove empty entries
-    bAccession = ~cellfun(@isempty,s.code.fmri_new);
-    s.code.fmri_new = s.code.fmri_new(bAccession);
-    s.accession = s.accession(bAccession);
+    bNewFmri = ~cellfun(@isempty,s.code.fmri_new);
+    s.code.fmri_new = s.code.fmri_new(bNewFmri);
+    s.accession = s.accession(bNewFmri);
     s.num_functional = s.num_functional(bFmri);
+    s.bNewFmri = bNewFmri(bFmri); %only save relative to fmri indices
 
 % more data paths
 s.path.functional.raw	= cellfun(@(code) GetPathFunctional(strDirData,code,'run','all') ,s.code.fmri,'uni',false);
