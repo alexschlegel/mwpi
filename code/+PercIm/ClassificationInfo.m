@@ -93,7 +93,7 @@ function [sResult, bError] = LoadInfo(strSession, opt)
 		% get stimulus ids and bCorrects, which are all in the same place %
 
 		% matrix of field names vs. what they're called in the struct
-		cField = [ [cScheme; 'correct'], {
+		cField = [ [cScheme; 'testCorrect'], {
 											'vClass'
 											'cClass'
 											'ucClass'
@@ -117,7 +117,7 @@ function [sResult, bError] = LoadInfo(strSession, opt)
 
     % add fixation task average accuracy (per-run mean)
     sBlock.fixationAcc = repmat([sRes.meanFracFixationCorrect]',1,numel(sRes(1).res));
-    sBlock.correct = sBlock.correct & (sBlock.fixationAcc >= opt.fixation_threshold);
+    sBlock.correct = sBlock.testCorrect & (sBlock.fixationAcc >= opt.fixation_threshold);
 
 		% response time %
 		% stored values are already relative to test screen, in units of TR
