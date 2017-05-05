@@ -45,14 +45,16 @@ function s = ClassificationInfo(varargin)
 % This work is licensed under a Creative Commons Attribution-NonCommercial-
 % ShareAlike 3.0 Unported License.
 
+global strDirData;
+
 %parse the inputs
 	opt	= ParseArgs(varargin,...
-			'session'	, []					, ...
-			'ifo'		, []					, ...
-			'offset'	, 0						, ...
-			'maxlen'	, 4						, ...
-      'fixation_threshold', 0.85, ...
-			'fcorrect'	, @(s,r,t,e) deal(t,e)	  ...
+			'session'			, []					, ...
+			'ifo'				, []					, ...
+			'offset'			, 0						, ...
+			'maxlen'			, 4						, ...
+			'fixation_threshold', 0.85, ...
+			'fcorrect'			, @(s,r,t,e) deal(t,e)	  ...
 			);
 
 	if isempty(opt.ifo)
@@ -64,8 +66,27 @@ function s = ClassificationInfo(varargin)
 	else
 		cSession	= ForceCell(opt.session);
 	end
+	
+	cPathSession = cellfun(@(sess) PathUnsplit(strDirData, sess, 'mat'), cSession, 'uni', false);
+	
+	
+	% temporarily remove research dir from path to deal with crashing issue in R2017a
+	strDirLib = PathSplit(which('PrepPI'));
+	strDirResearch = DirAppend(strDirLib, 'research');
+	rmpath(strDirResearch);
+	warning('off','MATLAB:load:classNotFound');
+	warning('off','MATLAB:dispatcher:UnresolvedFunctionHandle');
+	
+	cPTBIFO = cellfun(@(path) conditional(FileExists(path), ...
+							  getfield(load(path), 'PTBIFO'), []), ...
+							  cPathSession, 'uni', false);
+						  
+	% put it back
+	addpath(strDirResearch);
+	warning('on','MATLAB:load:classNotFound');
+	warning('on','MATLAB:dispatcher:UnresolvedFunctionHandle');
 
-cResult	= cellfunprogress(@(sess) LoadInfo(sess,opt),cSession,...
+	cResult	= cellfunprogress(@(sSession) LoadInfo(sSession,opt),cPTBIFO,...
  							'label'	, 'loading mwpi classification info'	, ...
  							'uni'	, false									  ...
  							);
@@ -75,16 +96,12 @@ cResult	= cellfunprogress(@(sess) LoadInfo(sess,opt),cSession,...
 end
 %--------------------------------------------------------------------------%
 
-function [sResult, bError] = LoadInfo(strSession, opt)
-	global strDirData;
+function [sResult, bError] = LoadInfo(sSession, opt)
 
 	bError = false;
-
-	strPathSession	= PathUnsplit(strDirData,strSession,'mat');
 	cScheme = opt.ifo.cScheme;
 
-	if FileExists(strPathSession)
-		sSession = getfield(load(strPathSession), 'PTBIFO');
+	if ~isempty(sSession)
 
 		PIParam = MWPI.Param;
 
@@ -194,6 +211,7 @@ function [sResult, bError] = LoadInfo(strSession, opt)
 					end
 
 					% manual corrections
+					strSession = sSession.session.name;
 					[cTarget{kR}, cEvent{kR}] = opt.fcorrect(strSession, kR, cTarget{kR}, cEvent{kR});
 				end
 

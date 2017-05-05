@@ -114,9 +114,23 @@ status(sprintf('selected subject state: %s',opt.state));
 s.code.fmri_new = cell(size(cID));
 s.accession = cell(size(cID));
 s.num_functional = zeros(size(cID));
+
+strDirLib = PathSplit(which('PrepPI'));
+strDirResearch = DirAppend(strDirLib, 'research');
     for kS=1:nSubject
 		if numel(s.path.session.fmri) >= kS && ~isempty(s.path.session.fmri{kS})
+			
+			% temporarily remove research dir from path to deal with crashing issue in R2017a
+			rmpath(strDirResearch);
+			warning('off','MATLAB:load:classNotFound');
+			warning('off','MATLAB:dispatcher:UnresolvedFunctionHandle');
+			
 			x	= load(s.path.session.fmri{kS});
+						
+			% put it back
+			warning('on','MATLAB:load:classNotFound');
+			warning('on','MATLAB:dispatcher:UnresolvedFunctionHandle');			
+			addpath(strDirResearch);
             
             s.num_functional(kS) = size(x.PTBIFO.mwpi.run, 2);
 			s.subject.age(kS)	= ConvertUnit(x.PTBIFO.experiment.start - x.PTBIFO.subject.dob,'ms','day')/365.25;
