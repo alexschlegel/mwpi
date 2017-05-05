@@ -4,7 +4,7 @@ function sync_mwpi(direction, remoteHost)
 % helmholtz or kohler, treats helmholtz as the local computer if it is
 % mounted at /mnt/tsestudies/helmholtz.
 %
-% Syntax: sync_mwpi(direction)
+% Syntax: sync_mwpi(direction, remoteHost)
 %
 % Input: direction: either 'push' or 'pull', the direction to sync.
 %        remoteHost: the hostname of the computer to sync to or from.

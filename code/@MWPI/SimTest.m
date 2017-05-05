@@ -207,10 +207,10 @@ ListenChar(0);
 			end
 						
 			% now wait for them to press a button
-			if mwpi.bPractice
-				keyboard = exp.Input;
+			if strcmp(exp.Input.type, 'keyboard')
+				keyb = exp.Input;
 			else
-				keyboard = exp.Input.Key;
+				keyb = exp.Input.Key;
 			end
 % 			[~, ~, kButton, bAbort] = exp.Input.WaitDownOnce('responselrud', ...
 % 				'fabort', @() keyboard.DownOnce('abort'), ...
@@ -219,7 +219,7 @@ ListenChar(0);
 			kButton = [];
 			while true
 				[bDown, ~, ~, kButton] = exp.Input.DownOnce('responselrud');
-				bAbortDown = keyboard.DownOnce('abort');
+				bAbortDown = keyb.DownOnce('abort');
 				if bAbortDown
 					bEnd = true;
 				end

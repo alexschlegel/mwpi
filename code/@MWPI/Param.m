@@ -54,7 +54,7 @@ function P = InitializeP
 	
 	%global strDirBase;
     
-    SCALING_FACTOR = 0.65;
+    SCALING_FACTOR = 0.6;
     
 	%--stimulus parameters-------------------------------------
     P.stim = struct( ...
@@ -187,7 +187,7 @@ function P = InitializeP
         'colYes',		'green',...
         'colNo',		'red',  ...
 		'colHint',		'white', ...
-        'sizeDone',		3.5,    ... (d.v.a.)
+        'sizeDone',		SCALING_FACTOR*3.5,    ... (d.v.a.)
         'colDone',		'red',  ...
 		'instrOffset',	3		... (d.v.a.)
 		);

@@ -108,6 +108,10 @@ classdef MWPI < PTB.Object
             opt.text_family = MWPI.Param('text','family');
             opt.text_color = MWPI.Param('text','colNorm');
             
+            if opt.debug == 2
+                opt.input = 'keyboard';
+            end
+            
             % usb over serial support
             if opt.usb_serial && ~mwpi.bPractice && opt.debug == 0
                 opt.serial_port = '/dev/ttyUSB0';
