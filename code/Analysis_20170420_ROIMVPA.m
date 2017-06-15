@@ -90,3 +90,26 @@ dimPCAMin	= 10;
 %save the results
 	strPathOut	= PathUnsplit(strDirOut,'result','mat');
 	save(strPathOut,'res');
+
+	
+% plot results
+
+	% accuracy
+	barlabel = {'perceived';'remembered'};
+	schemes = {'percept','image'};
+	y = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.accuracy.mean, schemes, 'uni', false));
+	sig = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.accuracy.pfdr, schemes, 'uni', false));
+	err = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.accuracy.se, schemes, 'uni', false));
+	chance = 0.25;
+	
+	h = alexplot(y, 'type', 'bar', 'grouplabel', upper(cMask), 'barlabel', barlabel, 'sig', sig, ...
+		'hline', chance, 'ylabel', 'Accuracy (%)', 'error', repmat(err,1,1,2));
+
+	% confusion correlation
+	y = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.confusion.corr.mz, schemes, 'uni', false));
+	sig = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.confusion.corr.pfdr, schemes, 'uni', false));
+	err = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.confusion.corr.sez, schemes, 'uni', false));
+	
+	h2 = alexplot(y, 'type', 'bar',  'grouplabel', upper(cMask), 'barlabel', barlabel, 'sig', sig, ...
+		'ylabel', 'Fisher''s z (r)', 'error', repmat(err,1,1,2), 'axistype','zero');
+

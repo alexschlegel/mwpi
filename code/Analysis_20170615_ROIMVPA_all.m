@@ -1,16 +1,16 @@
-% Analysis_20170421_ROICCMVPA.m
-% roi cross-classification analysis with the 6 gridop ROIs
-% saving tabulated results.
+% Analysis_20170615_ROIMVPA_all.m
+% roi classification analysis with the 6 gridop ROIs, on all 23 subjs,
+% saving tabulated results, on all trials (not just correct)
 % adapted from mwlearn code
 
 global strDirData
 global strDirAnalysis
 
-nCore	= 11;
-dimPCA	= 50;
+nCore		= 11;
+dimPCAMin	= 10;
 
 %create directory for analysis results
-	strNameAnalysis	= '20170421_roiccmvpa';
+	strNameAnalysis	= '20170615_roimvpa_all';
 	strDirOut		= DirAppend(strDirAnalysis, strNameAnalysis);
 	CreateDirPath(strDirOut);
 
@@ -18,6 +18,8 @@ dimPCA	= 50;
 	ifo			= PercIm.SubjectInfo;
 	cSession	= ifo.code.fmri;
 	
+	% the CorrectTimings function is not tracked by GitHub b/c it contains
+	% subject codes.
 	s	= PercIm.ClassificationInfo('session',cSession,'ifo',ifo,'fcorrect',@CorrectTimings);
 
 %the ROIs
@@ -44,30 +46,30 @@ dimPCA	= 50;
 			strDirOutScheme	= DirAppend(strDirOut,strScheme);
 		
 		%targets and chunks
-			cTarget	= s.attr.target.(strScheme).correct;
+			cTarget	= s.attr.target.(strScheme).all;
             
             % extra targets
             sExtraTarget = struct();
             for kT = 1:numel(cExtraScheme)
                 strCurrScheme = cExtraScheme{kT};
-                sExtraTarget.(strCurrScheme) = s.attr.target.(strCurrScheme).correct;
+                sExtraTarget.(strCurrScheme) = s.attr.target.(strCurrScheme).all;
             end
             sExtraTarget = restruct(sExtraTarget);
-
             
-			kChunk	= s.attr.chunk.correct;
+			kChunk	= s.attr.chunk.all;
 			
 			durRun	= MWPI.Param('exp','run','time');
 			nRun	= cellfun(@(c) numel(c)/durRun,kChunk,'uni',false);
 			kRun	= cellfun(@(n) reshape(repmat(1:n,[durRun 1]),[],1),nRun,'uni',false);
 		
-		%ROI Cross-classification!
-			res.(strScheme)	= MVPAROICrossClassify(...
+		%ROI Classification!
+
+			res.(strScheme) = MVPAROIClassify(...
 								'dir_out'			, strDirOutScheme	, ...
 								'dir_data'			, strDirData		, ...
 								'subject'			, cSession			, ...
 								'mask'				, cMask				, ...
-								'dim'				, dimPCA			, ...
+								'mindim'			, dimPCAMin			, ...
 								'targets'			, cTarget			, ...
                                 'extra_targets'     , sExtraTarget      , ...
                                 'tabulate_results'  , true              , ...
@@ -86,27 +88,28 @@ dimPCA	= 50;
 	end
 
 %save the results
-	strPathOut	= PathUnsplit(strDirOut,'result','mat');    
+	strPathOut	= PathUnsplit(strDirOut,'result','mat');
 	save(strPathOut,'res');
+
 	
 % plot results
-	% correlation
-	% construct connection matrices
-	nMask = length(cMask);
-	schemes = {'percept', 'image'};
-	[cConnection, cSig, cSigCorr] = deal(repmat({NaN(nMask)}, 1, length(schemes)));
-	trilInds = find(tril(cConnection{1}, -1));
-	colors = GetPlotColors(2);
-	
-	% image
-	for kS = 1:length(schemes)
-		strScheme = schemes{kS};
-		cConnection{kS}(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.mr;
-		cSig{kS}(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.p;
-		cSigCorr{kS}(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.pfdr;
-		cLUT{kS} = MakeLUT(colors(kS,:),1);
-	end
-
-	h = alexplot(cConnection, 'type', 'connection', 'label', upper(cMask), 'sig', cSig, ...
-		'sigcorr', cSigCorr, 'arcwidth', 'scale', 'lut', cLUT);
-	
+% 
+% 	% accuracy
+% 	barlabel = {'perceived';'remembered'};
+% 	schemes = {'percept','image'};
+% 	y = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.accuracy.mean, schemes, 'uni', false));
+% 	sig = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.accuracy.pfdr, schemes, 'uni', false));
+% 	err = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.accuracy.se, schemes, 'uni', false));
+% 	chance = 0.25;
+% 	
+% 	h = alexplot(y, 'type', 'bar', 'grouplabel', upper(cMask), 'barlabel', barlabel, 'sig', sig, ...
+% 		'hline', chance, 'ylabel', 'Accuracy (%)', 'error', repmat(err,1,1,2));
+% 
+% 	% confusion correlation
+% 	y = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.confusion.corr.mz, schemes, 'uni', false));
+% 	sig = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.confusion.corr.pfdr, schemes, 'uni', false));
+% 	err = cell2mat(cellfun(@(sch) res.(sch).result.allway.stats.confusion.corr.sez, schemes, 'uni', false));
+% 	
+% 	h2 = alexplot(y, 'type', 'bar',  'grouplabel', upper(cMask), 'barlabel', barlabel, 'sig', sig, ...
+% 		'ylabel', 'Fisher''s z (r)', 'error', repmat(err,1,1,2), 'axistype','zero');
+% 
