@@ -26,9 +26,15 @@ res.roi = DoANOVA(sROIRes);
 sCCRes = load(PathUnsplit(DirAppend(strDirAnalysis, '20170421_roiccmvpa'),'result','mat'));
 res.cc = DoANOVA(sCCRes);
 
-%save the results
+% save the results
 strPathOut	= PathUnsplit(strDirOut,'result','mat');
 save(strPathOut,'res');
+
+% plot results
+	% roi
+	
+
+%=======================================================================%
 
 	function res = DoANOVA(sResult)
 		for kS = 1:2

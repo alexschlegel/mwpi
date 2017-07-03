@@ -94,19 +94,17 @@ dimPCA	= 50;
 	% construct connection matrices
 	nMask = length(cMask);
 	schemes = {'percept', 'image'};
-	[cConnection, cSig, cSigCorr] = deal(repmat({NaN(nMask)}, 1, length(schemes)));
+	[connection, sig, sigCorr] = deal(NaN(nMask));
 	trilInds = find(tril(cConnection{1}, -1));
 	colors = GetPlotColors(2);
 	
-	% image
 	for kS = 1:length(schemes)
 		strScheme = schemes{kS};
-		cConnection{kS}(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.mr;
-		cSig{kS}(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.p;
-		cSigCorr{kS}(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.pfdr;
-		cLUT{kS} = MakeLUT(colors(kS,:),1);
+		connection(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.t;
+		sig(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.p;
+		sigCorr(trilInds) = res.(strScheme).result.allway.stats.confusion.corr.pfdr;
+		LUT = MakeLUT(colors(kS,:),1);
+		alexplot(connection, 'type', 'connection', 'label', upper(cMask), 'sig', sig, ...
+		'sigcorr', sigCorr, 'arcwidth', 'scale', 'lut', LUT, 'colorbar', false);
 	end
-
-	h = alexplot(cConnection, 'type', 'connection', 'label', upper(cMask), 'sig', cSig, ...
-		'sigcorr', cSigCorr, 'arcwidth', 'scale', 'lut', cLUT);
 	
